@@ -1,0 +1,31 @@
+env:
+  name: CartPole-v1
+
+seed: 0
+
+agent:
+  # Base PPO hyperparameters
+  lr_actor: 5e-4
+  lr_critic: 1e-3
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_eps: 0.2
+  epochs: 4
+  batch_size: 64
+  ent_coef: 0.01
+  vf_coef: 0.5
+  hidden_size: 128
+
+  # Dyna-PPO HPs
+  use_model: False          # Enable model-based updates
+  model_lr: 5e-4            # Learning rate for the model
+  model_epochs: 3           # Number of epochs of model training
+  model_batch_size: 128     # Batch size for model training
+  imag_horizon: 5           # Horizon for imagined trajectories
+  imag_batches: 10          # Number of batches for imagined updates
+  max_buffer_size: 10000    # Size of the replay buffer for imagined experiences
+
+train:
+  total_steps: 15000        # Total training steps
+  eval_interval: 5000       # More frequent evaluation to track progress
+  eval_episodes: 10         # More episodes for better evaluation statistics

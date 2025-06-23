@@ -1,6 +1,6 @@
 # Week 6: Actor‑Critic Methods
 
-This module builds on your policy‑gradient foundations by guiding you through actor‑critic methods, Proximal Policy Optimization (PPO), and continuous‑action algorithms.
+This module builds on your policy‑gradient foundations by guiding you through actor‑critic methods, Proximal Policy Optimization (PPO), and continuous‑action algorithms. We’ve divided the work into three levels of increasing complexity.
 
 Throughout, use [RLiable](https://github.com/google-research/rliable) for plotting performance curves and statistical comparisons. Feel free to leverage [HyperSweeper](https://github.com/automl/hypersweeper) for hyperparameter tuning if you wish.
 
@@ -8,10 +8,8 @@ Throughout, use [RLiable](https://github.com/google-research/rliable) for plotti
 
 ## Level 1: On‑Policy Actor‑Critic Baselines
 
-You will extend your REINFORCE agent to support baseline variants and analyze their impact on training performance.
-
 ### Task
-1. Complete the implementation in `actor_critic.py` and `networks.py` (the `ActorCriticAgent` class) to support all four baseline modes:
+1. Complete the implementation in `actor_critic.py` (the `ActorCriticAgent` class) to support all four baseline modes:
    - `none` (no baseline)
    - `avg` (running-average reward)
    - `value` (learned value function)
@@ -25,20 +23,9 @@ You will extend your REINFORCE agent to support baseline variants and analyze th
 
 Training scripts and defaults live in `configs/agent/actor_critic.yaml`.
 
-**Note:** We have provided tests for Actor Critic at `tests/week_6/test_actor_critic.py`. 
-Since the directory contains tests for both PPO and Actor critic, you can locally test **only** your level-1 solution by running
-
-```bash
-TEST_FILE=test_actor_critic.py make test-week-6
-```
-This is also the default test executed by GitHub Classroom, so only your Level 1 submission will be auto-graded.
-
-
 ---
 
-## Level 2: Implementing PPO
-
-Now you’ll implement the PPO algorithm from scratch, and integrate enhancements based on common implementation best practices.
+## Level 2: Extending PPO
 
 ### Task
 1. Complete the TODOs in `ppo.py` to flesh out a working PPO agent with:
@@ -57,20 +44,9 @@ Now you’ll implement the PPO algorithm from scratch, and integrate enhancement
 
 Training defaults in `configs/agent/ppo.yaml`.
 
-**Note:** We have provided basic tests for the PPO at `tests/week_6/test_ppo.py`. These are not strict grading tests, and we do not expect your solution to strictly adhere to the provided template. These test cases are solely to give you some initial feedback, and you are free to adapt the `ppo.py` file to fit your need.
-
-You can run these test by running
-
-```bash
-TEST_FILE=test_ppo.py make test-week-6`
-```
-
-
 ---
 
 ## Level 3: Continuous‑Action Control and SAC
-
-In this final level, you’ll explore continuous action spaces and implement Soft Actor‑Critic (SAC), an off‑policy method for stable learning.
 
 ### Task
 1. Adapt your PPO implementation to work in continuous action spaces. Replace categorical policy with a Gaussian policy (mean + log‑std outputs).
@@ -84,8 +60,6 @@ In this final level, you’ll explore continuous action spaces and implement Sof
    - Plot learning curves via RLiable
    - Discuss sample efficiency and stability differences
 
-You may reference [spinup](https://spinningup.openai.com/en/latest/) as reference implementations. Feel free to use additional online resources as well. 
+Use stable‑baselines3 or spinup from DeepMind/OpenAI as reference implementations.  Cite any code you adapt.
 
-**Note:** Cite any code you adapt.
-
-Good luck!
+Good luck, and happy RL‑ing!

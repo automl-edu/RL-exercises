@@ -9,6 +9,7 @@ from typing import Any, List, Tuple
 import gymnasium as gym
 import numpy as np
 import torch
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Categorical
 
@@ -41,38 +42,6 @@ def set_seed(env: gym.Env, seed: int = 0) -> None:
 
 
 class PPOAgent(AbstractAgent):
-    """
-    On-policy Proximal Policy Optimization (PPO) agent with GAE, clipped surrogate loss,
-    entropy bonus, and value loss regularization.
-
-    Parameters
-    ----------
-    env : gym.Env
-        The environment to train the agent in.
-    lr_actor : float, optional
-        Learning rate for the policy network (default is 5e-4).
-    lr_critic : float, optional
-        Learning rate for the value network (default is 1e-3).
-    gamma : float, optional
-        Discount factor for future rewards (default is 0.99).
-    gae_lambda : float, optional
-        Lambda parameter for Generalized Advantage Estimation (default is 0.95).
-    clip_eps : float, optional
-        Clipping parameter for the PPO objective (default is 0.2).
-    epochs : int, optional
-        Number of epochs to train on each collected trajectory (default is 4).
-    batch_size : int, optional
-        Batch size for PPO updates (default is 64).
-    ent_coef : float, optional
-        Coefficient for entropy bonus (default is 0.01).
-    vf_coef : float, optional
-        Coefficient for value loss term (default is 0.5).
-    seed : int, optional
-        Random seed for reproducibility (default is 0).
-    hidden_size : int, optional
-        Number of hidden units in the policy and value networks (default is 128).
-    """
-
     def __init__(
         self,
         env: gym.Env,
@@ -114,25 +83,6 @@ class PPOAgent(AbstractAgent):
     def predict(
         self, state: np.ndarray
     ) -> Tuple[int, torch.Tensor, torch.Tensor, torch.Tensor]:
-        """
-        Predict an action using the current policy.
-
-        Parameters
-        ----------
-        state : np.ndarray
-            Current observation from the environment.
-
-        Returns
-        -------
-        action : int
-            Sampled action from the policy.
-        log_prob : torch.Tensor
-            Log probability of the selected action.
-        entropy : torch.Tensor
-            Entropy of the action distribution.
-        value : torch.Tensor
-            Value estimate of the current state.
-        """
         t = torch.from_numpy(state).float()
         probs = self.policy(t).squeeze(0)
         dist = Categorical(probs)
@@ -148,66 +98,47 @@ class PPOAgent(AbstractAgent):
         self,
         rewards: List[float],
         values: torch.Tensor,
-        next_values: torch.Tensor,  # noqa: F841
+        next_values: torch.Tensor,
         dones: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        Compute advantages and returns using Generalized Advantage Estimation (GAE).
+        deltas = (
+            torch.tensor(rewards, dtype=torch.float32)
+            + self.gamma * next_values * (1 - dones)
+            - values
+        )
+        advantages: List[torch.Tensor] = []
+        A = 0.0
+        for delta, done in zip(reversed(deltas), reversed(dones)):
+            A = delta + self.gamma * self.gae_lambda * A * (1 - done)
+            advantages.insert(0, A)
+        advs = torch.stack(advantages)
+        returns = advs + values
 
-        Parameters
-        ----------
-        rewards : list of float
-            Rewards collected during the trajectory.
-        values : torch.Tensor
-            Value estimates of the current states.
-        next_values : torch.Tensor
-            Value estimates of the next states.
-        dones : torch.Tensor
-            Boolean indicators of episode termination (1 if done, 0 otherwise).
+        # normalize
+        advs = (advs - advs.mean()) / (advs.std(unbiased=False) + 1e-8)
 
-        Returns
-        -------
-        advantages : torch.Tensor
-            Advantage estimates.
-        returns : torch.Tensor
-            Value targets for training the critic.
-        """
-        # TODO: compute advantages using GAE (Hint: replicate the GAE formula from actor critc)
-        return None
+        # **detach both** so that later `loss.backward()` never
+        # tries to re-enter this graph
+        return advs.detach(), returns.detach()
 
     def update(self, trajectory: List[Any]) -> None:
-        """
-        Perform PPO update using the collected trajectory.
-
-        Parameters
-        ----------
-        trajectory : list of tuple
-            Each tuple contains (state, action, log_prob, entropy, reward, done, next_state).
-
-        Returns
-        -------
-        policy_loss : float
-            Final policy loss after all epochs.
-        value_loss : float
-            Final value loss.
-        entropy_loss : float
-            Final entropy loss.
-        """
         # unpack trajectory
         states = torch.stack([torch.from_numpy(t[0]).float() for t in trajectory])
         actions = torch.tensor([t[1] for t in trajectory])
         old_logps = torch.stack([t[2] for t in trajectory]).detach()
         entropies = torch.stack([t[3] for t in trajectory]).detach()  # noqa: F841
-        rewards = [t[4] for t in trajectory]  # noqa: F841
-        dones = torch.tensor([t[5] for t in trajectory], dtype=torch.float32)  # noqa: F841
+        rewards = [t[4] for t in trajectory]
+        dones = torch.tensor([t[5] for t in trajectory], dtype=torch.float32)
 
-        # TODO:  compute values and next_values without gradients
-        values = ...  # noqa: F841
-        next_values = ...  # noqa: F841
+        # compute values and next_values
+        with torch.no_grad():
+            values = self.value_fn(states)
+            next_states = torch.stack(
+                [torch.from_numpy(t[6]).float() for t in trajectory]
+            )
+            next_values = self.value_fn(next_states)
 
-        # TODO: compute advantages and returns
-        advantages = ...
-        returns = ...
+        advantages, returns = self.compute_gae(rewards, values, next_values, dones)
 
         dataset = torch.utils.data.TensorDataset(
             states, actions, old_logps, advantages, returns
@@ -218,21 +149,18 @@ class PPOAgent(AbstractAgent):
 
         for _ in range(self.epochs):
             for b_states, b_actions, b_oldlogp, b_adv, b_ret in loader:
-                # TODO: compute policy loss, value loss, and entropy loss
+                probs = self.policy(b_states)
+                dist = Categorical(probs)
+                new_logp = dist.log_prob(b_actions)
+                ratio = torch.exp(new_logp - b_oldlogp)
+                surr1 = ratio * b_adv
+                surr2 = torch.clamp(ratio, 1 - self.clip_eps, 1 + self.clip_eps) * b_adv
+                policy_loss = -torch.min(surr1, surr2).mean()
 
-                # TODO: compute new log probabilities by sampling actions from the policy distribution
-                new_logp = ...  # noqa: F841
+                value_preds = self.value_fn(b_states).squeeze(-1)
+                value_loss = F.mse_loss(value_preds, b_ret)
 
-                # TODO: compute the ratio of new log probabilities to old log probabilities
-
-                # TODO: compute the clipped surrogate loss using the clipped objective
-                policy_loss = ...
-
-                # TODO: compute value loss using mean squared error
-                value_loss = ...
-
-                # TODO: compute entropy loss using the distribution's entropy
-                entropy_loss = ...
+                entropy_loss = -dist.entropy().mean()
 
                 loss = (
                     policy_loss
@@ -251,18 +179,6 @@ class PPOAgent(AbstractAgent):
         eval_interval: int = 10000,
         eval_episodes: int = 5,
     ) -> None:
-        """
-        Train the PPO agent for a specified number of environment steps.
-
-        Parameters
-        ----------
-        total_steps : int
-            Total number of environment steps to train for.
-        eval_interval : int, optional
-            Number of steps between evaluations (default is 10000).
-        eval_episodes : int, optional
-            Number of episodes to average over during evaluation (default is 5).
-        """
         eval_env = gym.make(self.env.spec.id)
         step_count = 0
         while step_count < total_steps:
@@ -298,23 +214,6 @@ class PPOAgent(AbstractAgent):
     def evaluate(
         self, eval_env: gym.Env, num_episodes: int = 10
     ) -> Tuple[float, float]:
-        """
-        Evaluate the current policy on a separate environment.
-
-        Parameters
-        ----------
-        eval_env : gym.Env
-            Environment to run evaluation episodes in.
-        num_episodes : int, optional
-            Number of evaluation episodes (default is 10).
-
-        Returns
-        -------
-        mean_return : float
-            Average return across evaluation episodes.
-        std_return : float
-            Standard deviation of returns.
-        """
         returns = []
         for _ in range(num_episodes):
             state, _ = eval_env.reset(seed=self.seed)

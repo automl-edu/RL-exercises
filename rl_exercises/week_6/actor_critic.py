@@ -32,38 +32,13 @@ def set_seed(env: gym.Env, seed: int = 0) -> None:
 
 
 class ActorCriticAgent(AbstractAgent):
-    """
-    On-policy Actor-Critic agent with configurable baselines and GAE support.
-
-    Parameters
-    ----------
-    env : gym.Env
-        The environment to train the agent in.
-    lr_actor : float, optional
-        Learning rate for the policy network (default is 5e-4).
-    lr_critic : float, optional
-        Learning rate for the value network (default is 1e-3).
-    gamma : float, optional
-        Discount factor for computing returns (default is 0.99).
-    gae_lambda : float, optional
-        Lambda parameter for Generalized Advantage Estimation (default is 0.95).
-    seed : int, optional
-        Random seed for reproducibility (default is 0).
-    hidden_size : int, optional
-        Hidden layer size for policy and value networks (default is 128).
-    baseline_type : str, optional
-        Type of baseline: 'none', 'avg', 'value', or 'gae' (default is 'value').
-    baseline_decay : float, optional
-        Decay factor for running average baseline (default is 0.9).
-    """
-
     def __init__(
         self,
         env: gym.Env,
         lr_actor: float = 5e-4,
         lr_critic: float = 1e-3,
         gamma: float = 0.99,
-        gae_lambda: float = 0.95,
+        gae_lambda: float = 0.95,  # FIXME: lambda for GAE
         seed: int = 0,
         hidden_size: int = 128,
         baseline_type: str = "value",  # 'none', 'avg', 'value', or 'gae'
@@ -85,33 +60,13 @@ class ActorCriticAgent(AbstractAgent):
             self.value_fn = ValueNetwork(env.observation_space, hidden_size)
             self.value_optimizer = optim.Adam(self.value_fn.parameters(), lr=lr_critic)
 
-        # running average baseline for 'avg' -- initialized to zero
-        # this is used to compute advantages in the 'avg' baseline mode
-        # it is updated during training
+        # running average baseline for 'avg'
         if baseline_type == "avg":
             self.running_return = 0.0
 
     def predict_action(
         self, state: np.ndarray, evaluate: bool = False
     ) -> Tuple[int, torch.Tensor]:
-        """
-        Predict action from current policy given a state.
-
-        Parameters
-        ----------
-        state : np.ndarray
-            Current observation from the environment.
-        evaluate : bool, optional
-            If True, selects the action deterministically (default is False).
-
-        Returns
-        -------
-        action : int
-            Selected action.
-        log_prob : torch.Tensor or None
-            Log probability of the selected action (None if in evaluation mode).
-        """
-
         t = torch.from_numpy(state).float()
         probs = self.policy(t).squeeze(0)
         if evaluate:
@@ -121,20 +76,6 @@ class ActorCriticAgent(AbstractAgent):
         return action, dist.log_prob(torch.tensor(action))
 
     def compute_returns(self, rewards: List[float]) -> torch.Tensor:
-        """
-        Compute discounted returns from a list of rewards.
-
-        Parameters
-        ----------
-        rewards : list of float
-            Rewards collected during the episode.
-
-        Returns
-        -------
-        returns : torch.Tensor
-            Discounted return for each timestep.
-        """
-
         R = 0.0
         returns = []
         for r in reversed(rewards):
@@ -145,33 +86,14 @@ class ActorCriticAgent(AbstractAgent):
     def compute_advantages(
         self, states: List[np.ndarray], rewards: List[float]
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        Compute advantages using a learned value function.
-
-        Parameters
-        ----------
-        states : list of np.ndarray
-            States encountered during the trajectory.
-        rewards : list of float
-            Rewards collected during the episode.
-
-        Returns
-        -------
-        advantages : torch.Tensor
-            Advantage values for each timestep.
-        returns : torch.Tensor
-            Discounted returns.
-        """
-        # TODO: convert rewards into discounted returns
-
-        # TODO: convert states list into a torch batch and compute state-values
-
-        # TODO: compute raw advantages = returns - values
-
-        # TODO: normalize advantages to zero mean and unit variance and use 1e-8 for numerical stability
-
-        # return normalized advantages and returns
-        return None
+        returns = self.compute_returns(rewards)
+        states_t = torch.stack([torch.from_numpy(s).float() for s in states])
+        values = self.value_fn(states_t)
+        advantages = returns - values.detach()
+        advantages = (advantages - advantages.mean()) / (
+            advantages.std(unbiased=False) + 1e-8
+        )
+        return advantages, returns
 
     def compute_gae(
         self,
@@ -180,62 +102,34 @@ class ActorCriticAgent(AbstractAgent):
         next_states: List[np.ndarray],
         dones: List[bool],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        Compute Generalized Advantage Estimation (GAE).
-
-        Parameters
-        ----------
-        states : list of np.ndarray
-            Current states.
-        rewards : list of float
-            Rewards received after taking actions.
-        next_states : list of np.ndarray
-            Next states observed after actions.
-        dones : list of bool
-            Whether the episode terminated at each step.
-
-        Returns
-        -------
-        advantages : torch.Tensor
-            GAE advantages for each timestep.
-        returns : torch.Tensor
-            Target returns for training the critic.
-        """
-
-        # TODO: compute values and next_values using your value_fn
-
-        # TODO: compute deltas: one-step TD errors
-
-        # TODO: accumulate GAE advantages backwards
-
-        # TODO: compute returns using advantages and values
-
-        # TODO: normalize advantages to zero mean and unit variance and use 1e-8 for numerical stability
-
-        # TODO: advantages, returns  # replace with actual values (detach both to avoid re-entering the graph)
-
-        return None
+        # convert to tensors
+        states_t = torch.stack([torch.from_numpy(s).float() for s in states])
+        next_t = torch.stack([torch.from_numpy(s).float() for s in next_states])
+        rewards_t = torch.tensor(rewards, dtype=torch.float32)
+        dones_t = torch.tensor(dones, dtype=torch.float32)
+        # values
+        values = self.value_fn(states_t)
+        next_values = self.value_fn(next_t)
+        # deltas
+        deltas = rewards_t + self.gamma * next_values * (1 - dones_t) - values
+        # GAE advantage
+        advs: List[torch.Tensor] = []
+        A = 0.0
+        for delta, done in zip(reversed(deltas), reversed(dones_t)):
+            A = delta + self.gamma * self.gae_lambda * A * (1 - done)
+            advs.insert(0, A)
+        advantages = torch.stack(advs)
+        returns = advantages + values.detach()
+        # normalize
+        advantages = (advantages - advantages.mean()) / (
+            advantages.std(unbiased=False) + 1e-8
+        )
+        return advantages.detach(), returns.detach()
 
     def update_agent(
         self,
         trajectory: List[Tuple[np.ndarray, int, float, np.ndarray, bool, Any]],
     ) -> Tuple[float, float]:
-        """
-        Update the policy and value networks using the collected trajectory.
-
-        Parameters
-        ----------
-        trajectory : list of tuple
-            List of (state, action, reward, next_state, done, log_prob) from one episode.
-
-        Returns
-        -------
-        policy_loss : float
-            Scalar loss for the policy network.
-        value_loss : float
-            Scalar loss for the value network (0.0 if no critic is used).
-        """
-
         states, actions, rewards, next_states, dones, log_probs = zip(*trajectory)
 
         # select advantage method
@@ -246,17 +140,13 @@ class ActorCriticAgent(AbstractAgent):
         elif self.baseline_type == "value":
             adv, ret = self.compute_advantages(list(states), list(rewards))
         elif self.baseline_type == "avg":
-            # compute returns and advantages using running average baseline
             ret = self.compute_returns(list(rewards))
-
-            # TODO: compute advantages by subtracting running return
-            adv = ...
-
-            # TODO: normalize advantages to zero mean and unit variance and use 1e-8 for numerical stability
-            # (Reminder, use unbiased=False for torch tensors)
-
-            # TODO: update running return using baseline decay
-            # (x = baseline_decay * x + (1 - baseline_decay) * mean return)
+            adv = ret - self.running_return
+            adv = (adv - adv.mean()) / (adv.std(unbiased=False) + 1e-8)
+            self.running_return = (
+                self.baseline_decay * self.running_return
+                + (1 - self.baseline_decay) * ret.mean().item()
+            )
         else:
             ret = self.compute_returns(list(rewards))
             adv = (ret - ret.mean()) / (ret.std(unbiased=False) + 1e-8)
@@ -289,23 +179,6 @@ class ActorCriticAgent(AbstractAgent):
     def evaluate(
         self, eval_env: gym.Env, num_episodes: int = 10
     ) -> Tuple[float, float]:
-        """
-        Evaluate policy over multiple episodes.
-
-        Parameters
-        ----------
-        eval_env : gym.Env
-            Environment for evaluation.
-        num_episodes : int, optional
-            Number of episodes to run (default is 10).
-
-        Returns
-        -------
-        mean_return : float
-            Average episode return.
-        std_return : float
-            Standard deviation of returns.
-        """
         self.policy.eval()
         returns: List[float] = []
         with torch.no_grad():
@@ -328,18 +201,6 @@ class ActorCriticAgent(AbstractAgent):
         eval_interval: int = 10000,
         eval_episodes: int = 5,
     ) -> None:
-        """
-        Train the agent for a given number of steps.
-
-        Parameters
-        ----------
-        total_steps : int
-            Total number of training steps.
-        eval_interval : int, optional
-            Interval (in steps) at which to evaluate the policy (default is 10000).
-        eval_episodes : int, optional
-            Number of episodes to run for each evaluation (default is 5).
-        """
         eval_env = gym.make(self.env.spec.id)
         step_count = 0
 

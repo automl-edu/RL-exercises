@@ -31,7 +31,7 @@ agent:
 
 train:
   # Total environment interactions to run
-  total_steps: 20000
+  total_steps: 50000
 
   # Evaluation settings
   eval_interval: 10000  # evaluate every N steps
