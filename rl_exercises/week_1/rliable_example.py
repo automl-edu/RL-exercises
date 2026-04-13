@@ -49,7 +49,6 @@ plt.gcf().canvas.manager.set_window_title(
 )
 plt.legend()
 plt.tight_layout()
-plt.show()
 # save figure to file
 plt.savefig("iqm_sample_efficiency_curve.png")
 plt.close()
