@@ -6,6 +6,8 @@ As this is your first step into Deep RL, you will also be introduced to the expe
 - Run each experiment across multiple random seeds to assess robustness.
 - Report both the mean performance and a measure of variation (e.g. confidence intervals) to evaluate the reliability of your results.
 
+Wherever relevant, use [RLiable](https://github.com/google-research/rliable) for plotting your results. If you wish to explore design decisions, use [HyperSweeper](https://github.com/automl/hypersweeper) for hyperparameter tuning.
+
 ## Level 1
 ### Deep Q Learning
 The goal of this exercise is to help you build an understanding of how deep networks affect learning in value-based RL. 

@@ -1,6 +1,8 @@
 # Week 4: Model-free Control
 This week you will implement you first real model-free learning algorithm, SARSA, as well as conduct some experiments concerning its hyperparameters.
 
+Wherever relevant, use [RLiable](https://github.com/google-research/rliable) for plotting your results. If you wish to explore design decisions, use [HyperSweeper](https://github.com/automl/hypersweeper) for hyperparameter tuning.
+
 ## Level 1
 ### Model-free Control with SARSA
 Your task is to complete the code stubs in `sarsa.py` and  `epsilon_greedy_policy` to implement the SARSA algorithm from the lecture. 

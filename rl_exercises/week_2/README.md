@@ -6,6 +6,8 @@ This week you’ll get hands‑on experience with the core dynamic‑programming
 ⚠ Before you start, make sure to have read the general `README.md`.
 You should add your solutions to the central train and eval script.
 
+Wherever relevant, use [RLiable](https://github.com/google-research/rliable) for plotting your results. If you wish to explore design decisions, use [HyperSweeper](https://github.com/automl/hypersweeper) for hyperparameter tuning.
+
 ## Level 1: Build your own MDP
 In `my_env.py` implement a new `gymnasium.Env` that satisfies the same interface as our example `MarsRover` (in `environments.py` in the parent folder). In particular, your env must define:
 

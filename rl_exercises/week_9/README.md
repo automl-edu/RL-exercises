@@ -2,7 +2,7 @@
 
 This week you will combine model-based imagination with on-policy updates by completing the implementation in **dyna_ppo.py** and performing multiple experiments using it.
 
-Throughout, use [RLiable](https://github.com/google-research/rliable) for plotting performance curves and statistical comparisons. Feel free to leverage [HyperSweeper](https://github.com/automl/hypersweeper) for hyperparameter tuning if you wish.
+Wherever relevant, use [RLiable](https://github.com/google-research/rliable) for plotting your results. If you wish to explore design decisions, use [HyperSweeper](https://github.com/automl/hypersweeper) for hyperparameter tuning.
 
 ---
 

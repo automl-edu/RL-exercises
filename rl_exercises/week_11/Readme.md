@@ -1,6 +1,8 @@
 # Week 11: Generalization
 This week is the last regular exercise week and we'll focus on working with generalization environments. The goal is for you to be able to run and evaluate agents on cMDPs.
 
+Wherever relevant, use [RLiable](https://github.com/google-research/rliable) for plotting your results. If you wish to explore design decisions, use [HyperSweeper](https://github.com/automl/hypersweeper) for hyperparameter tuning.
+
 ## Level 1: Evaluation Protocol
 The lecture included a proticol by Kirk et al. that evaluates training performance, in-distribution generalization and out-of-distribution generalization for each varied context feature. Use one of the [CARL](https://github.com/automl/CARL) classic control environments to design a context space with two varying features. Now partition this space into a training and test distribution. Define your training contexts, run training and then evaluate the different performance regions. Upload a *plot* visualizing them. What do you observe?
 

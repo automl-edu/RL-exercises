@@ -19,6 +19,11 @@ tensorboard --logdir .
 ## Replay
 The notebook lets you do the same training, but inspect it closer. I will take some time again, but if you want to know a bit more about the code it can be a nice intro. Understanding it is not required at all at this point, however.
 
+## RLiable Example
+We use `rliable` to evaluate RL algorithms more robustly. You can find an example script `rliable_example.py` in this folder alongside some dummy data (`demo_data_seed_*.csv`). Run it to see how `rliable` aggregates performance and computes confidence intervals across multiple random seeds!
+```bash
+python rliable_example.py
+```
 
 # Exercise
 

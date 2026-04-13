@@ -1,6 +1,8 @@
 # Week 10: AutoRL
 This week the exercises will dive deep into hyperparameters. You're free to explore all the questions with any RL algorithms and environments you want and look into how well HPO configurations generalize, the effects of multi-fidelity optimization and what happens with context in the mix.
 
+Wherever relevant, use [RLiable](https://github.com/google-research/rliable) for plotting your results. If you wish to explore design decisions, use [HyperSweeper](https://github.com/automl/hypersweeper) for hyperparameter tuning.
+
 ## Level 1: How Well Does HPO Generalize in RL?
 Design a generalization setting for HPO in RL. First, describe the generalization task. Are we generalizing across seeds, environments, algorithms, etc.? What results would you expext? Now run the optimization and record your results in a *.txt file*. Do they match your expectations?
 

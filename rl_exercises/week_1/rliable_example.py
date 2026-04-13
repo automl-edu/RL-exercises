@@ -36,7 +36,7 @@ iqm_scores, iqm_cis = get_interval_estimates(
 )
 
 # This is a utility function, but you can also just use a normal line plot with the IQM and CI scores
-plot_sample_efficiency_curve(
+_ = plot_sample_efficiency_curve(
     steps + 1,
     iqm_scores,
     iqm_cis,
@@ -50,3 +50,6 @@ plt.gcf().canvas.manager.set_window_title(
 plt.legend()
 plt.tight_layout()
 plt.show()
+# save figure to file
+plt.savefig("iqm_sample_efficiency_curve.png")
+plt.close()

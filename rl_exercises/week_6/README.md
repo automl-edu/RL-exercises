@@ -2,7 +2,7 @@
 
 This module builds on your policy‑gradient foundations by guiding you through actor‑critic methods, Proximal Policy Optimization (PPO), and continuous‑action algorithms. We’ve divided the work into three levels of increasing complexity.
 
-Throughout, use [RLiable](https://github.com/google-research/rliable) for plotting performance curves and statistical comparisons. Feel free to leverage [HyperSweeper](https://github.com/automl/hypersweeper) for hyperparameter tuning if you wish.
+Wherever relevant, use [RLiable](https://github.com/google-research/rliable) for plotting your results. If you wish to explore design decisions, use [HyperSweeper](https://github.com/automl/hypersweeper) for hyperparameter tuning.
 
 ---
 
