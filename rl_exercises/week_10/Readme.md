@@ -4,7 +4,7 @@ This week the exercises will dive deep into hyperparameters. You're free to expl
 Wherever relevant, use [RLiable](https://github.com/google-research/rliable) for plotting your results. If you wish to explore design decisions, use [HyperSweeper](https://github.com/automl/hypersweeper) for hyperparameter tuning.
 
 ## Level 1: How Well Does HPO Generalize in RL?
-Design a generalization setting for HPO in RL. First, describe the generalization task. Are we generalizing across seeds, environments, algorithms, etc.? What results would you expext? Now run the optimization and record your results in a *.txt file*. Do they match your expectations?
+Design a generalization setting for HPO in RL. First, describe the generalization task. Are we generalizing across seeds, environments, algorithms, etc.? What results would you expect? Now run the optimization and record your results in a *.txt file*. Do they match your expectations?
 
 ## Level 2: Multi-fidelity in RL
 Partial evaluations can make HPO much more efficient, but there are also pitfalls if early success doesn't translate to good final performance. Design a settings where you think initial scores can be deceiving and describe why. Test with any multi-fidelity optimizer if good initial performances actually influence the optimization in a negative way (for example by checking the optimization history or using DeepCave to run analyses). Upload a *.txt file* with your results.
