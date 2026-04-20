@@ -37,4 +37,4 @@ Now write an e-mail to Mingxuan **and** Theresa with a link to the repo and your
 To give you efficient feedback, also add these three GitHub accounts with permission level *write*:
 - MingxuanChe
 - DuyPhamQuang
-- TheEimer8
+- TheEimer
