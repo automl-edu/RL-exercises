@@ -86,15 +86,19 @@ class PolicyIteration(AbstractAgent):
             The selected action and an empty info dictionary.
         """
         # TODO: Return the action according to current policy
-        raise NotImplementedError("predict_action() is not implemented.")
+        return self.pi[observation], {}
 
     def update_agent(self, *args: tuple, **kwargs: dict) -> None:
         """Run policy iteration to compute the optimal policy and state-action values."""
         if not self.policy_fitted:
             # TODO: Call policy iteration with initialized values
             printr("Initial policy: ", self.pi)
-            raise NotImplementedError("update_agent() is not implemented.")
             printr("Q: ", self.Q)
+            self.Q, self.pi, self.steps = policy_iteration(
+                self.Q,
+                self.pi,
+                (self.S, self.A, self.T, self.R_sa, self.gamma),
+            )
             printr("Final policy: ", self.pi)
             printr("Policy iteration steps:", self.steps)
             self.policy_fitted = True
@@ -158,7 +162,19 @@ def policy_evaluation(
     nS = R_sa.shape[0]
     V = np.zeros(nS)
 
-    # TODO: implement Policy Evaluation for all states
+    while True:
+        V_new = np.zeros(nS)
+
+        for s in range(nS):
+            a = pi[s]
+
+            for next_s in range(nS):
+                V_new[s] += T[s, a, next_s] * (R_sa[s, a] + gamma * V[next_s])
+
+        if np.max(np.abs(V_new - V)) < epsilon:
+            break
+
+        V = V_new
 
     return V
 
@@ -192,6 +208,12 @@ def policy_improvement(
     Q = np.zeros((nS, nA))
     pi_new = None
     # TODO: implement Policy Improvement for all states
+    for s in range(nS):
+        for a in range(nA):
+            for s_next in range(nS):
+                Q[s, a] += T[s, a, s_next] * (R_sa[s, a] + gamma * V[s_next])
+
+    pi_new = np.argmax(Q, axis=1)
 
     return Q, pi_new
 
@@ -224,6 +246,24 @@ def policy_iteration(
     S, A, T, R_sa, gamma = MDP
 
     # TODO: Combine evaluation and improvement in a loop.
+
+    improvement_steps = 0
+
+    while True:
+        old_pi = pi.copy()
+
+        # 1) Policy Evaluation
+        V = policy_evaluation(pi, T, R_sa, gamma, epsilon)
+
+        # 2) Policy Improvement
+        Q, pi = policy_improvement(V, T, R_sa, gamma)
+
+        improvement_steps += 1
+
+        # 3) Stop if policy did not change
+        if np.array_equal(pi, old_pi):
+            break
+    return Q, pi, improvement_steps
 
 
 if __name__ == "__main__":
