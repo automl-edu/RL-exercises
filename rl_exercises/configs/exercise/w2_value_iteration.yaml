@@ -1,0 +1,16 @@
+# @package _global_
+defaults:
+  - ../agent: value_iteration
+
+env_name: MarsRover
+env_kwargs:
+  transition_probabilities:
+    - [0.5, 0.5]
+    - [0.5, 0.5]
+    - [0.5, 0.5]
+    - [0.5, 0.5]
+    - [0.5, 0.5]
+training_steps: 1
+batch_size: 0
+buffer_cls: SimpleBuffer
+buffer_kwargs: {}

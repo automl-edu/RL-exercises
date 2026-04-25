@@ -64,18 +64,14 @@ class ValueIteration(AbstractAgent):
         if self.policy_fitted:
             return
 
-        V_opt, pi_opt = value_iteration(
-            T=self.T,
-            R_sa=self.R_sa,
-            gamma=self.gamma,
-            seed=self.seed,
-        )
+        # TODO: Call value_iteration() with the MDP components
+        V_opt, pi_opt = None, None  # placeholder
 
         self.V = V_opt
         self.pi = pi_opt
         printr("Converged V:", self.V)
         printr("Derived policy π:", self.pi)
-        self.policy_fitted = True
+        # self.policy_fitted = True # TODO: uncomment this after implementation
 
     def predict_action(
         self,
@@ -86,7 +82,9 @@ class ValueIteration(AbstractAgent):
         """Choose action = π(observation). Runs update if needed."""
         if not self.policy_fitted:
             self.update_agent()
-        return int(self.pi[observation]), {}
+
+        # TODO: Return action from learned policy
+        raise NotImplementedError("predict_action() is not implemented.")
 
 
 def value_iteration(
@@ -126,25 +124,11 @@ def value_iteration(
     """
     n_states, n_actions = R_sa.shape
     V = np.zeros(n_states, dtype=float)
-    rng = np.random.default_rng(seed)
+    # rng = np.random.default_rng(seed)  uncomment this
+    pi = None
 
-    # Policy‐backup loop
-    while True:
-        delta = 0.0
-        for s in range(n_states):
-            # Q(s,a) for all actions at state s
-            Q_sa = R_sa[s, :] + gamma * (T[s, :, :] @ V)
-            v_new = np.max(Q_sa)
-            delta = max(delta, abs(v_new - V[s]))
-            V[s] = v_new
-        if delta < epsilon:
-            break
+    # TODO: update V using the Q values until convergence
 
-    # Greedy policy extraction with tie‐breaking
-    pi = np.zeros(n_states, dtype=int)
-    for s in range(n_states):
-        Q_sa = R_sa[s, :] + gamma * (T[s, :, :] @ V)
-        best_actions = np.flatnonzero(Q_sa == Q_sa.max())
-        pi[s] = int(rng.choice(best_actions))
+    # TODO: Extract the greedy policy from V and update pi
 
     return V, pi

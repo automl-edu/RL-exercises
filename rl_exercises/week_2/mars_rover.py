@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import pathlib
+
 import matplotlib.pyplot as plt  # type: ignore[import]
 import numpy as np
 from matplotlib.offsetbox import AnnotationBbox, OffsetImage  # type: ignore[import]
 from rich import print as printr
 from rl_exercises.environments import MarsRover
+
+script_dir = pathlib.Path(__file__).parent.resolve()
 
 env = MarsRover()
 actions = [0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0]
@@ -24,7 +28,7 @@ for i in range(env.horizon):
 
 # Plot
 fig, ax = plt.subplots()
-image = plt.imread("figures/alien_1f47d.png")
+image = plt.imread(script_dir / "figures" / "alien_1f47d.png")
 image_box = OffsetImage(image, zoom=0.1)
 x = np.arange(0, len(states))
 y = states
@@ -34,4 +38,4 @@ for x0, y0 in zip(x, y):
 ax.plot(x, y, c="green")
 ax.set_xlabel("Step")
 ax.set_ylabel("State")
-plt.show()
+fig.savefig(script_dir / "figures" / "mars_rover.png")

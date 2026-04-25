@@ -3,7 +3,7 @@
 This week you will get used to RL environments in code and implement the fundamental algorithms of policy and value iteration. You'll see how your agent's behaviour changes over time and hopefully have your first successful training runs.
 
 ⚠ Before you start, make sure to have read the general `README.md`.
-You should add your solutions to the central train and eval script (see the section 'Repository Strcuture' in the general `README.md`)
+You should add your solutions to the central train and eval script (see the section 'Repository Structure' in the general `README.md`)
 
 ## Level 1: Policy & Value Iteration
 ### 1. The MarsRover Environment
@@ -25,21 +25,21 @@ The code stub to be completed is in `policy_iteration.py`.
 You can run the exercise with:
 ```bash
 # Policy Iteration
-python rl_exercises/train_agent.py +week/w2=policy_iteration
+python rl_exercises/train_agent.py +exercise=w2_policy_iteration
 ```
 
 Please note that in this exercise we work with the state-value / Q function. In principle, the same formula applies.
 
-### 3. Value Iteration for the probibalistic MarsRover
+### 3. Value Iteration for the probabilistic MarsRover
 For this second exercise, we modify the MarsRover environment, now the rover may or may not execute the requested action, the probability is 50%. 
 You will complete the code in `value_iteration.py` in order
 to evaluate a policy on this variation of our environment.
-What happens if you different initial policies? Will you always converge to the same policy? What if you vary gamma?
+What happens if you try different initial policies? Will you always converge to the same policy? What if you vary gamma?
 
 You can run the exercise with:
 ```bash
 # Value Iteration
-python rl_exercises/train_agent.py +week/w2=value_iteration
+python rl_exercises/train_agent.py +exercise=w2_value_iteration
 ```
 
 ## Level 2: Decreasing Information Flow

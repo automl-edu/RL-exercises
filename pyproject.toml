@@ -28,7 +28,7 @@ dependencies = [
         "hydra-core",
         "hydra-submitit-launcher",
         "hydra-colorlog",
-        "stable-baselines3",
+        "stable-baselines3>=2.0.0",
         "moviepy",
         "rliable"
 ]
