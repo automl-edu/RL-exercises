@@ -253,6 +253,7 @@ class ContextualMarsRover(MarsRover):
 
     Context features:
     - action_success_prob: probability that the commanded action is executed
+    - left_goal_reward: reward at the leftmost state
     - right_goal_reward: reward at the rightmost state
 
     If context_visible=True, the observation is encoded as:
@@ -297,6 +298,8 @@ class ContextualMarsRover(MarsRover):
         self.actions = np.arange(2)
         self.transition_matrix = self.T = self.get_transition_matrix()
 
+    # Convert one context into the transition probabilities and rewards
+    # needed by the tabular planning algorithms.
     def _context_to_mdp(
         self, context: dict[str, float]
     ) -> tuple[np.ndarray, list[float]]:
@@ -313,7 +316,7 @@ class ContextualMarsRover(MarsRover):
         rewards = [left_goal_reward, 0.0, 0.0, 0.0, right_goal_reward]
         return transition_probabilities, rewards
 
-
+    # We rotate through the context list after every reset.
     def _advance_context(self) -> None:
         if self.context_change != "round_robin":
             raise ValueError(f"Unknown context_change: {self.context_change}")
@@ -321,6 +324,7 @@ class ContextualMarsRover(MarsRover):
         self.context_id = (self.context_id + 1) % len(self.contexts)
         self.P, self.rewards = self._context_to_mdp(self.contexts[self.context_id])
 
+    # If context is visible, each context gets its own copy of the 5 positions.
     def _encode_obs(self, position: int, context_id: int | None = None) -> int:
         if not self.context_visible:
             return position
@@ -357,7 +361,6 @@ class ContextualMarsRover(MarsRover):
 
         self.position = self._move_position(self.position, a_used)
 
-
         reward = float(self.rewards[self.position])
         terminated = False
         truncated = self.current_steps >= self.horizon
@@ -370,6 +373,7 @@ class ContextualMarsRover(MarsRover):
             {"context": self.contexts[self.context_id]},
         )
 
+    # Keep movement bounded to the 5 physical rover positions.
     def _move_position(self, position: int, action: int) -> int:
         if action == 0:
             return max(0, position - 1)
@@ -378,7 +382,6 @@ class ContextualMarsRover(MarsRover):
             return min(self.n_positions - 1, position + 1)
 
         raise RuntimeError(f"{action} is not a valid action")
-
 
     def get_next_state(self, state: int, action: int) -> int:
         context_id, position = self._decode_obs(state)
@@ -389,13 +392,13 @@ class ContextualMarsRover(MarsRover):
 
         return next_position
 
-
     def get_transition_matrix(self, S=None, A=None, P=None):
         if self.context_visible:
             return self._get_context_visible_transition_matrix()
 
         return self._get_context_hidden_transition_matrix()
 
+    # With visible context, the transition matrix keeps contexts separated.
     def _get_context_visible_transition_matrix(self):
         nS = len(self.contexts) * self.n_positions
         nA = 2
@@ -411,12 +414,12 @@ class ContextualMarsRover(MarsRover):
                     intended = self._move_position(pos, a)
                     flipped = self._move_position(pos, 1 - a)
 
-
                     T[s, a, self._encode_obs(intended, c_id)] += P[pos, a]
                     T[s, a, self._encode_obs(flipped, c_id)] += 1.0 - P[pos, a]
 
         return T
 
+    # Without context in the observation, the agent plans on the average MDP.
     def _get_context_hidden_transition_matrix(self):
         nS = self.n_positions
         nA = 2
@@ -430,12 +433,12 @@ class ContextualMarsRover(MarsRover):
                     intended = self._move_position(s, a)
                     flipped = self._move_position(s, 1 - a)
 
-
                     T[s, a, intended] += P[s, a] / len(self.contexts)
                     T[s, a, flipped] += (1.0 - P[s, a]) / len(self.contexts)
 
         return T
 
+    # Policy iteration needs expected rewards for every state-action pair.
     def get_reward_per_action(self):
         T = self.get_transition_matrix()
         nS, nA, _ = T.shape

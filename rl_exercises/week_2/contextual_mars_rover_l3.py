@@ -7,25 +7,28 @@ from rl_exercises.train_agent import evaluate
 from rl_exercises.week_2.policy_iteration import PolicyIteration
 
 
+# These are the contexts used to compute the policy.
 TRAIN_CONTEXTS = [
     {"action_success_prob": 0.90, "left_goal_reward": 1.0, "right_goal_reward": 10.0},
     {"action_success_prob": 0.75, "left_goal_reward": 8.0, "right_goal_reward": 2.0},
     {"action_success_prob": 0.60, "left_goal_reward": 3.0, "right_goal_reward": 6.0},
 ]
 
+# Validation contexts are different from training but still similar.
 VALIDATION_CONTEXTS = [
     {"action_success_prob": 0.80, "left_goal_reward": 1.0, "right_goal_reward": 9.0},
     {"action_success_prob": 0.70, "left_goal_reward": 7.0, "right_goal_reward": 2.0},
 ]
 
+# Test contexts are more shifted, so they check generalization.
 TEST_CONTEXTS = [
     {"action_success_prob": 0.45, "left_goal_reward": 10.0, "right_goal_reward": 1.0},
     {"action_success_prob": 0.95, "left_goal_reward": 1.0, "right_goal_reward": 3.0},
 ]
 
 
-
 def train_policy(context_visible: bool) -> PolicyIteration:
+    # Train once on the training context set.
     env = ContextualMarsRover(
         contexts=TRAIN_CONTEXTS,
         context_visible=context_visible,
@@ -35,6 +38,7 @@ def train_policy(context_visible: bool) -> PolicyIteration:
 
     agent = PolicyIteration(env=env, seed=0, filename="policy_l3.npy")
     agent.update_agent()
+    # Save the learned policy so we can evaluate the same policy later.
     agent.save()
     return agent
 
@@ -45,6 +49,7 @@ def evaluate_on_context_set(
     context_visible: bool,
     name: str,
 ) -> float:
+    # Recreate the environment with the requested context split.
     env = ContextualMarsRover(
         contexts=contexts,
         context_visible=context_visible,
@@ -61,6 +66,7 @@ def run_experiment(context_visible: bool) -> dict[str, float]:
     label = "context_visible" if context_visible else "context_hidden"
     print(f"\n=== {label} ===")
 
+    # Run the same experiment once with hidden context and once with visible context.
     agent = train_policy(context_visible=context_visible)
 
     results = {
