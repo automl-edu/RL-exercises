@@ -241,9 +241,7 @@ class MarsRover(gym.Env):
                 T[s, a, s_next_success] += p_success  # add value
 
                 p_fail = 1.0 - p_success  # Probability of failure -> = 1 - p_success
-                s_next_fail = self.get_next_state(
-                    s, 1 - a
-                )  # Go to next state with inverse action of a
+                s_next_fail = self.get_next_state(s, 1 - a)  # Probabilits of failure
                 T[s, a, s_next_fail] += p_fail  # ad value
 
         return T
@@ -495,7 +493,7 @@ class ContextualMarsRover(gym.Env):
         # Implemented friction dynamics
         p_success = self.current_context["friction"]
         if self.rng.random() > p_success:
-            action = 1 - action  # Take inverse action
+            action = 1 - action  # Take inverse for failure
 
         # If right then state + 1
         if action == 1:
@@ -611,9 +609,7 @@ class ContextualMarsRover(gym.Env):
                 T[s, a, s_next_success] += p_success  # add value
 
                 p_fail = 1.0 - p_success  # Probability of failure -> = 1 - p_success
-                s_next_fail = self.get_next_state(
-                    s, 1 - a
-                )  # Go to next state with inverse action of a
+                s_next_fail = self.get_next_state(s, 1 - a)  # Probability of failure
                 T[s, a, s_next_fail] += p_fail  # ad value
 
         return T

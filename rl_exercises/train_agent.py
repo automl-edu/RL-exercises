@@ -48,7 +48,7 @@ def generate_cMDP_sets(n_train=100, n_test=50):
         {"friction": rng.uniform(0.6, 0.9), "goal_pos": rng.uniform(2.5, 4.0)}
         for _ in range(n_test)
     ]
-    # Validation
+    # Testing
     test_set = [
         {"friction": rng.uniform(0.1, 0.5), "goal_pos": rng.uniform(0.0, 2.0)}
         for _ in range(n_test)
@@ -250,7 +250,9 @@ def make_env(env_name: str, env_kwargs: dict = {}) -> gym.Env:
     """
     if env_name == "MarsRover":
         # env = MarsRover(**env_kwargs)
-        env = ContextualMarsRover(**env_kwargs)
+        env = ContextualMarsRover(
+            **env_kwargs, contexts=[{"friction": 0.9, "goal_pos": 2}]
+        )
         # env = TimeLimit(env, max_episode_steps=env.horizon)
     elif "MiniGrid" in env_name:
         env = gym.make(env_name, **env_kwargs)

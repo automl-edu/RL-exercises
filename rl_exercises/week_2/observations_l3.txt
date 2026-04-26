@@ -1,0 +1,72 @@
+Context was implemented using two context features: friction and goal position.
+Thus, the ContextualMarsRover class is basically a copy of the normal MarsRover class, just with 'contexts' that can be specified when initializing.
+If no initialization is provided, a set of 3 standard values is assigned.
+-> See __init__() of ContextualMarsRover class
+
+Initially, we tried to evaluate automatically by initializing with different sets of context values, altering train_agent.py substantially.
+In addition, we tried to define training, test and validation sets.
+However, this proved to be unsuccessful as a. we could not make it work as intended and b. it destroyed the automatic testing feature.
+Thus, we ran our evaluation manually on manually defined sets.
+Same procedure, just with fewer values tested. 
+We hope this is Ok, because it took a lot of time anyways. 
+As reference, we left the two helper functions we intended to use in train_agent.py, so you may take a look.
+Feedback is appreciated, whether we understood the task correctly.
+Anyways, here is what we found out by running manual tests.
+
+
+Changing 'friction' parameter:
+Incrementally, we changed the friction parameter from 0.1 to 1.0.
+Starting with friction = 0.1 and goal_pos = 4, we noticed that the agent was not able to attain any rewards at all.
+Policy iteration steps: 4
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 833.36it/s, episode reward=0, episode step=10]
+Eval reward after 0 steps was 0.0.
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 5645.09it/s, episode reward=0, episode step=10]
+Final eval reward was: 0.0
+
+This behaviour did not change until friction = 0.3 and goal_pos = 4.
+In some cases, the agent was able to achieve small rewards (10, 20, 40 once).
+However, in most cases the agent achieved a reward = 0.
+
+Gradually increasing friction in steps of 0.1, we noticed that the achieved rewards seemed to be getting larger, proportionally to the friction value provided.
+I. e. with friction = 0.3 the agent achieved some rewards (maybe 10 average), with friction = 0.4 the agent achieved some more (maybe 15), with friction = 0.5 the agent achieved even more (maybe 20), and so on and so forth.
+With friction = 0.6, the agent reliably achieved a final reward > 0.
+With friction = 1.0, the agent reliably achieved a final reward = 90.
+Policy iteration steps: 4
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 1749.08it/s, episode reward=90, episode step=10]
+Eval reward after 0 steps was 90.0.
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 5745.62it/s, episode reward=90, episode step=10]
+Final eval reward was: 90.0
+
+We draw the following, explainable conclusion:
+Generally, with a greater value of friction, a greater reward can be achieved. 
+This is, because the value of friction has direct implications on the agent's movements.
+The lower the friction value, the more likely it is that the agent is not able to actually change state.
+-> In such a case probability is action = 1 - action
+I. e. the slippier the surface, upon which the MarsRover roams across the landscape, the more likely it is that the Rover spins its wheels without actually moving.
+
+
+
+After changing the 'friction' parameter, we also made observations when changing the goal position:
+This parameter is somewhat limited, as only 5 states exist for the Rover to reside in.
+
+When changing the goal position to either 4, the Rover has two steps from its starting position to get to the goal position.
+
+With friction = 0.9 and goal_pos = 4 (standard), the agent is able to achieve a high reward reliably.
+Policy iteration steps: 4
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 1908.24it/s, episode reward=70, episode step=10]
+Eval reward after 0 steps was 70.0.
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 4505.16it/s, episode reward=90, episode step=10]
+Final eval reward was: 90.0
+
+When changing goal_pos to 3, the reward drops from a reliable 90 to 30.
+This is because we changed the goal_pos, but did not change the reward function itself, basically misleading the agent.
+When changing goal_pos to 0, 1 or 2, the rewards drops to 0.
+The agent still finds the most rewards in state 4 (static reward function [1, 0, 0, 0, 10]).
+Thus, we intentially mislead the agent, confusing it and dropping reward to 0 in the process.
+If we changed the reward function accordingly, i. e. the rewards and the goal state actually matched, the behaviour would be different.
+
+
+In conclusion, our results are what we expected.
+The given context provides the agent with the means to reach its goal faster, thus maximizing the reward.
+However, if we mislead the agent on purpose, as done with goal_pos, the agent is not able to attain any rewards because it is confused about what it is supposed to do.
+Thus, our findings generally match the finding of the paper.
