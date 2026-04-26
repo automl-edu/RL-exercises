@@ -249,10 +249,10 @@ def make_env(env_name: str, env_kwargs: dict = {}) -> gym.Env:
         Instantiated env
     """
     if env_name == "MarsRover":
-        # env = MarsRover(**env_kwargs)
-        env = ContextualMarsRover(
-            **env_kwargs, contexts=[{"friction": 0.9, "goal_pos": 2}]
-        )
+        env = MarsRover(**env_kwargs)
+        # env = ContextualMarsRover(
+        #    **env_kwargs, contexts=[{"friction": 0.9, "goal_pos": 2}]
+        # )
         # env = TimeLimit(env, max_episode_steps=env.horizon)
     elif "MiniGrid" in env_name:
         env = gym.make(env_name, **env_kwargs)
