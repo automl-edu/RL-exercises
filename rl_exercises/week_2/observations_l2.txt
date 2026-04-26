@@ -1,0 +1,3 @@
+Policy and value iteration both require explicit access to the transition
+matrix T and reward function R. Without these, neither works. 
+Therefore only having acces to step isnt sufficient for them to works 
