@@ -87,3 +87,9 @@ ignore = [
   # Conflicts with the formatter
   "COM812", "ISC001"
 ]
+
+[dependency-groups]
+dev = [
+    "isort>=8.0.1",
+    "ruff>=0.15.12",
+]

@@ -19,7 +19,7 @@ from omegaconf import DictConfig, OmegaConf
 from rich import print as printr
 from rl_exercises.agent import AbstractAgent, RandomAgent
 from rl_exercises.agent.buffer import SimpleBuffer
-from rl_exercises.environments import MarsRover
+from rl_exercises.environments import ContextualMarsRover, MarsRover
 from rl_exercises.week_2.policy_iteration import PolicyIteration
 from rl_exercises.week_2.value_iteration import ValueIteration
 
@@ -32,6 +32,47 @@ from rl_exercises.week_2.value_iteration import ValueIteration
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.monitor import Monitor
 from tqdm import tqdm
+
+
+# Helper function to generate contextual MDP
+def generate_cMDP_sets(n_train=100, n_test=50):
+    rng = np.random.default_rng(seed=42)
+
+    # Training
+    train_set = [
+        {"friction": rng.uniform(0.6, 0.9), "goal_pos": rng.uniform(2.5, 4.0)}
+        for _ in range(n_train)
+    ]
+    # Validation
+    val_set = [
+        {"friction": rng.uniform(0.6, 0.9), "goal_pos": rng.uniform(2.5, 4.0)}
+        for _ in range(n_test)
+    ]
+    # Validation
+    test_set = [
+        {"friction": rng.uniform(0.1, 0.5), "goal_pos": rng.uniform(0.0, 2.0)}
+        for _ in range(n_test)
+    ]
+
+    return train_set, val_set, test_set
+
+
+# Helper function to evaluate policy given a context
+def evaluate_on_contexts(env, agent, contexts: List[dict[str, float]]) -> float:
+    all_returns = []
+    for ctx in contexts:
+        # Set context in environment
+        env.unwrapped.current_context = ctx
+        obs, info = env.reset()
+        done = False
+        episode_return = 0
+        while not done:
+            action, _ = agent.predict_action(obs, info, evaluate=True)
+            obs, reward, terminated, truncated, _ = env.step(action)
+            episode_return += reward
+            done = terminated or truncated
+        all_returns.append(episode_return)
+    return np.mean(all_returns)
 
 
 @hydra.main("configs", "base", version_base="1.1")  # type: ignore[misc]
@@ -60,8 +101,7 @@ def train(cfg: DictConfig) -> float:
     elif cfg.agent == "random":
         agent = RandomAgent(env)
     else:
-        # TODO: add your agent options here
-        raise NotImplementedError
+        agent = PolicyIteration(env)
 
     buffer_cls = eval(cfg.buffer_cls)
     buffer = buffer_cls(**cfg.buffer_kwargs)
@@ -209,7 +249,8 @@ def make_env(env_name: str, env_kwargs: dict = {}) -> gym.Env:
         Instantiated env
     """
     if env_name == "MarsRover":
-        env = MarsRover(**env_kwargs)
+        # env = MarsRover(**env_kwargs)
+        env = ContextualMarsRover(**env_kwargs)
         # env = TimeLimit(env, max_episode_steps=env.horizon)
     elif "MiniGrid" in env_name:
         env = gym.make(env_name, **env_kwargs)

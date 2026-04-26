@@ -64,14 +64,15 @@ class ValueIteration(AbstractAgent):
         if self.policy_fitted:
             return
 
-        # TODO: Call value_iteration() with the MDP components
-        V_opt, pi_opt = None, None  # placeholder
+        V_opt, pi_opt = value_iteration(
+            T=self.T, R_sa=self.R_sa, gamma=self.gamma, seed=self.seed
+        )
 
         self.V = V_opt
         self.pi = pi_opt
         printr("Converged V:", self.V)
         printr("Derived policy π:", self.pi)
-        # self.policy_fitted = True # TODO: uncomment this after implementation
+        self.policy_fitted = True
 
     def predict_action(
         self,
@@ -83,8 +84,9 @@ class ValueIteration(AbstractAgent):
         if not self.policy_fitted:
             self.update_agent()
 
-        # TODO: Return action from learned policy
-        raise NotImplementedError("predict_action() is not implemented.")
+        # Simply call and return after
+        action = int(self.pi[observation])
+        return action, {}
 
 
 def value_iteration(
@@ -93,7 +95,7 @@ def value_iteration(
     R_sa: np.ndarray,
     gamma: float,
     seed: int | None = None,
-    epsilon: float = 1e-8,
+    epsilon: float = 1e-6,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Run Value Iteration on a finite MDP.
 
@@ -124,11 +126,33 @@ def value_iteration(
     """
     n_states, n_actions = R_sa.shape
     V = np.zeros(n_states, dtype=float)
-    # rng = np.random.default_rng(seed)  uncomment this
-    pi = None
+    # rng = np.random.default_rng(seed)
+    pi = np.zeros(n_states, dtype=int)
 
-    # TODO: update V using the Q values until convergence
+    # update V using the Q values until convergence
+    while True:
+        delta = 0
+        V_old = V.copy()
+        # Iterate over all actions for all states to calculate Q-Value
+        for s in range(n_states):
+            Q_s = np.zeros(n_actions)
+            for a in range(n_actions):
+                Q_s[a] = R_sa[s, a] + gamma * np.dot(T[s, a, :], V_old)
 
-    # TODO: Extract the greedy policy from V and update pi
+            # Value = max Q-Value
+            V[s] = np.max(Q_s)
+            delta = max(delta, np.abs(V[s] - V_old[s]))
+
+        if delta < epsilon:
+            break
+
+    # Extract the greedy policy from V and update pi
+    for s in range(n_states):
+        Q_s = np.zeros(n_actions)
+        for a in range(n_actions):
+            Q_s[a] = R_sa[s, a] + gamma * np.dot(T[s, a, :], V)
+
+        # Set policy for s via max Q-Value
+        pi[s] = np.argmax(Q_s)
 
     return V, pi

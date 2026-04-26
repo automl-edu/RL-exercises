@@ -188,7 +188,18 @@ class MarsRover(gym.Env):
         next_state : int
             The resulting state.
         """
-        # TODO: Implement the environment dynamics to determine the next state
+        limit = self.observation_space.n
+
+        # If right then state + 1
+        if action == 1:
+            return min(limit - 1, state + 1)
+
+        # If left then state - 1
+        elif action == 0:
+            # Do not go below 0 ig
+            return max(0, state - 1)
+
+        # else
         return state
 
     def get_transition_matrix(
@@ -220,8 +231,20 @@ class MarsRover(gym.Env):
 
         nS, nA = len(S), len(A)
         T = np.zeros((nS, nA, nS), dtype=float)
-        # TODO: Determine the transition matrix using the get_next_state function
-        # and the transition probabilities P.
+
+        # Iterate over all states
+        for s in range(nS):
+            # iterate over all actions for a given state
+            for a in range(nA):
+                p_success = P[s, a]  # Probability of success
+                s_next_success = self.get_next_state(s, a)  # Go to next state using a
+                T[s, a, s_next_success] += p_success  # add value
+
+                p_fail = 1.0 - p_success  # Probability of failure -> = 1 - p_success
+                s_next_fail = self.get_next_state(
+                    s, 1 - a
+                )  # Go to next state with inverse action of a
+                T[s, a, s_next_fail] += p_fail  # ad value
 
         return T
 
@@ -368,3 +391,282 @@ class MarsRoverPartialObsWrapper(gym.Wrapper):
             Rendered output from the base environment.
         """
         return self.env.render(mode=mode)
+
+
+class ContextualMarsRover(gym.Env):
+    """
+    Adapted MarsRover class to add two context features
+
+    Added friction and goal position as features:
+    Friction (friction) influences the transition probabilities
+    Goal position (goal_pos) changes the reward that can be attained
+
+    """
+
+    metadata = {"render_modes": ["human"]}
+
+    def __init__(
+        self,
+        transition_probabilities: np.ndarray = np.ones((5, 2)),
+        rewards: list[float] = [1, 0, 0, 0, 10],
+        horizon: int = 10,
+        seed: int | None = None,
+        contexts: list[dict[str, float]] = None,
+    ):
+        super().__init__()
+
+        self.rng = np.random.default_rng(seed)
+
+        self.rewards = list(rewards)
+        self.P = np.array(transition_probabilities)
+        self.horizon = int(horizon)
+        self.current_steps = 0
+        self.position = 2  # start at middle
+
+        # spaces
+        n = self.P.shape[0]
+        self.observation_space = gym.spaces.Discrete(n)
+        self.action_space = gym.spaces.Discrete(2)
+
+        # helpers
+        self.states = np.arange(n)
+        self.actions = np.arange(2)
+
+        # transition matrix
+        self.transition_matrix = self.T = self.get_transition_matrix()
+
+        # Define context features if not initialized
+        if contexts is None:
+            self.contexts = [
+                {"friction": 0.9, "goal_pos": 4},  # Standard
+                {"friction": 0.5, "goal_pos": 4},  # Slippery when wet
+                {
+                    "friction": 0.9,
+                    "goal_pos": 0,
+                },  # Change of goal, i.e. goal can change from right(4) to left(0)
+            ]
+        else:
+            self.contexts = contexts
+
+        # Round-Robin
+        self.context_idx = -1
+        self.current_context = None
+        self.rng = np.random.default_rng()
+
+    def reset(
+        self, *, seed: int | None = None, options: dict[str, Any] | None = None
+    ) -> tuple[int, dict[str, Any]]:
+
+        self.current_steps = 0
+        self.position = 2
+
+        # Select next context from list -> Round-Robin
+        self.context_idx = (self.context_idx + 1) % len(self.contexts)
+        self.current_context = self.contexts[self.context_idx]
+
+        # Add context to information dictionary!
+        return self.position, {"context": self.current_context}
+
+    def step(
+        self, action: int
+    ) -> tuple[int, SupportsFloat, bool, bool, dict[str, Any]]:
+
+        action = int(action)
+        if not self.action_space.contains(action):
+            raise RuntimeError(f"{action} is not a valid action (needs to be 0 or 1)")
+
+        self.current_steps += 1
+
+        """
+        # stochastic flip with prob 1 - P[pos, action]
+        p = float(self.P[self.position, action])
+        follow = self.rng.random() < p
+        a_used = action if follow else 1 - action
+
+        self.position = self.get_next_state(self.position, a_used)
+
+        reward = float(self.rewards[self.position])
+        terminated = False
+        truncated = self.current_steps >= self.horizon
+                
+        return self.position, reward, terminated, truncated, {}
+        """
+
+        # Implemented friction dynamics
+        p_success = self.current_context["friction"]
+        if self.rng.random() > p_success:
+            action = 1 - action  # Take inverse action
+
+        # If right then state + 1
+        if action == 1:
+            self.position = min(len(self.states) - 1, self.position + 1)
+        # If left then state - 1
+        elif action == 0:
+            # Do not go below 0 ig
+            self.position = max(0, self.position - 1)
+        # else
+        self.position = self.position
+
+        # Change Reward according to goal state context
+        if self.position == self.current_context["goal_pos"]:
+            reward = 10.0
+        else:
+            reward = 0.0
+
+        truncated = self.current_steps >= self.horizon
+        terminated = False
+
+        return self.position, float(reward), terminated, truncated, {}
+
+    def get_reward_per_action(self) -> np.ndarray:
+        """
+        Return the expected reward function R[s, a] for each (state, action) pair.
+
+        R[s, a] is the expected reward resulting from taking action a in state s,
+        accounting for the transition probabilities.
+
+        Returns
+        -------
+        R : np.ndarray
+            A (num_states, num_actions) array of expected rewards.
+        """
+        nS, nA = self.observation_space.n, self.action_space.n
+        R = np.zeros((nS, nA), dtype=float)
+        T = self.get_transition_matrix()
+
+        for s in range(nS):
+            for a in range(nA):
+                expected_reward = 0.0
+                for next_s in range(nS):
+                    expected_reward += T[s, a, next_s] * self.rewards[next_s]
+                R[s, a] = float(expected_reward)
+        return R
+
+    def get_next_state(self, state: int, action: int) -> int:
+        """
+        Get the next state given a state and an action (assuming deterministic execution).
+
+        Parameters
+        ----------
+        state : int
+            The current state.
+        action : int
+            The action to take.
+
+        Returns
+        -------
+        next_state : int
+            The resulting state.
+        """
+        limit = self.observation_space.n
+
+        # If right then state + 1
+        if action == 1:
+            return min(limit - 1, state + 1)
+
+        # If left then state - 1
+        elif action == 0:
+            # Do not go below 0 ig
+            return max(0, state - 1)
+
+        # else
+        return state
+
+    def get_transition_matrix(
+        self,
+        S: np.ndarray | None = None,
+        A: np.ndarray | None = None,
+        P: np.ndarray | None = None,
+    ) -> np.ndarray:
+        """
+        Construct a transition matrix T[s, a, s'].
+
+        Parameters
+        ----------
+        S : np.ndarray, optional
+            Array of states. Uses internal states if None.
+        A : np.ndarray, optional
+            Array of actions. Uses internal actions if None.
+        P : np.ndarray, optional
+            Action success probabilities. Uses internal P if None.
+
+        Returns
+        -------
+        T : np.ndarray
+            A (num_states, num_actions, num_states) tensor where
+            T[s, a, s'] = probability of transitioning to s' from s via a.
+        """
+        if S is None or A is None or P is None:
+            S, A, P = self.states, self.actions, self.P
+
+        nS, nA = len(S), len(A)
+        T = np.zeros((nS, nA, nS), dtype=float)
+
+        # Iterate over all states
+        for s in range(nS):
+            # iterate over all actions for a given state
+            for a in range(nA):
+                p_success = P[s, a]  # Probability of success
+                s_next_success = self.get_next_state(s, a)  # Go to next state using a
+                T[s, a, s_next_success] += p_success  # add value
+
+                p_fail = 1.0 - p_success  # Probability of failure -> = 1 - p_success
+                s_next_fail = self.get_next_state(
+                    s, 1 - a
+                )  # Go to next state with inverse action of a
+                T[s, a, s_next_fail] += p_fail  # ad value
+
+        return T
+
+    def render(self, mode: str = "human"):
+        """
+        Render the current state of the environment.
+
+        Parameters
+        ----------
+        mode : str
+            Render mode (only "human" is supported).
+        """
+        print(f"[MarsRover] pos={self.position}, steps={self.current_steps}")
+
+    def generate_cMDP_sets(n_train=100, n_test=50):
+        """
+        This function is partially AI generated, because we had no idea what to do.
+        I.e., the 'general structure' is generated, until we had understood, what we were supposed to do.
+        """
+
+        rng = np.random.default_rng(seed=42)
+
+        # Training set
+        train_set = []
+        for _ in range(n_train):
+            context = {
+                "friction": rng.uniform(0.6, 0.9),
+                "goal_pos": rng.uniform(2.5, 4.0),
+            }
+            train_set.append(context)
+
+        # validation set
+        # same distributions as training set
+        val_set = []
+        for _ in range(n_test):
+            context = {
+                "friction": rng.uniform(0.6, 0.9),
+                "goal_pos": rng.uniform(2.5, 4.0),
+            }
+            val_set.append(context)
+
+        # Testing set
+        # Values for context features outside of training distributions
+        test_set = []
+        for _ in range(n_test):
+            context = {
+                "friction": rng.uniform(0.1, 0.5),  # slippery when wet
+                "goal_pos": rng.uniform(0.0, 2.0),  # goal state changed to opposite
+            }
+            test_set.append(context)
+
+        return train_set, val_set, test_set
+
+    # generate sets
+    train_contexts, val_contexts, test_contexts = generate_cMDP_sets()
