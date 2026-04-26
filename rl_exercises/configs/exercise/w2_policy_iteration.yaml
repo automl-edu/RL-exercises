@@ -1,0 +1,10 @@
+# @package _global_
+defaults:
+  - ../agent: policy_iteration
+
+env_name: MarsRover
+env_kwargs: {}
+training_steps: 1
+batch_size: 0
+buffer_cls: SimpleBuffer
+buffer_kwargs: {}
