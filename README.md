@@ -25,7 +25,7 @@ The `tests` directory contains all tests for all weeks in their respective subfo
 1. Clone this repository:
     * ``git clone https://github.com/automl-edu/RL-exercises.git``
 2. Install the uv package manager for Python:
-   * ``python install uv``
+   * ``pip install uv``
 3. Create a new virtual environment:
     * ``uv venv --python 3.11``
 4. Activate the new env:

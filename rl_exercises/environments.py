@@ -188,10 +188,10 @@ class MarsRover(gym.Env):
         next_state : int
             The resulting state.
         """
-        n = self.observation_space.n 
+        n = self.observation_space.n
         if action == 0:  # go left
             return max(0, state - 1)
-        else:            # go right
+        else:  # go right
             return min(n - 1, state + 1)
 
     def get_transition_matrix(
@@ -225,7 +225,7 @@ class MarsRover(gym.Env):
         T = np.zeros((nS, nA, nS), dtype=float)
         for s in S:
             for a in A:
-            # with prob P[s,a], action succeeds
+                # with prob P[s,a], action succeeds
                 s_success = self.get_next_state(s, a)
                 T[s, a, s_success] += P[s, a]
 
