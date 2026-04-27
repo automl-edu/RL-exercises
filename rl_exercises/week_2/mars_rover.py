@@ -12,6 +12,7 @@ script_dir = pathlib.Path(__file__).parent.resolve()
 
 env = MarsRover()
 actions = [0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0]
+# actions = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0]
 
 states = []
 s, info = env.reset()
