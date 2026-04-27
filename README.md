@@ -36,7 +36,6 @@ The `tests` directory contains all tests for all weeks in their respective subfo
 ## Code Quality Hacks
 There are a few useful commands in this repository you should probably use.
 - `make format` will format all your code using the formatter black. This will make both your and our experience better.
-- `make check-flake8` will run the linter flake8 that can show you simple style inconsistencies like trailing lines, syntax errors or issues like unused variables. Use it regularly to make sure your code quality stays high and you don't accidentally introduce errors.
 - `make check` will check your code for formatting, linting, typing and docstyle. We recommend running this from time to time. It will also be checked when you commit your code.
 
 ## Relevant Packages
