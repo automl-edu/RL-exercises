@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+from pathlib import Path
 from rl_exercises.environments import ContextualMarsRover
 from rl_exercises.week_2.value_iteration import value_iteration
 
@@ -242,7 +243,7 @@ def run_mode(name: str, train_contexts: list[dict]) -> str:
         )
 
         filename = (
-            f"policy_{name.lower().replace(' ', '_')}_{label.replace(' ', '_')}.npy"
+            Path("rl_exercises/week_2") / f"policy_{name.lower().replace(' ', '_')}_{label.replace(' ', '_')}.npy"
         )
         np.save(filename, pi)
 
