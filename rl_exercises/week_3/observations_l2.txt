@@ -1,0 +1,75 @@
+Compare the performance of both, can you see differences in how they learn? 
+If you see that the environment is difficult to solve for both agents, try to explicitly log their states and actions. 
+What is the difference in how the approach the problem?
+
+Sarsa
+
+100%|██████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=9, episode step=10]
+Eval reward after 0 steps was 9.0.
+100%|████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 1002.94it/s, episode reward=0, episode step=10]
+Eval reward after 1000 steps was 0.0.
+100%|████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 991.56it/s, episode reward=50, episode step=10]
+Eval reward after 2000 steps was 50.0.
+100%|███████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 1000.07it/s, episode reward=50, episode step=10]
+Eval reward after 3000 steps was 50.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=50, episode step=10]
+Eval reward after 4000 steps was 50.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=90, episode step=10]
+Eval reward after 5000 steps was 90.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=50, episode step=10]
+Eval reward after 6000 steps was 50.0.
+100%|████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 499.86it/s, episode reward=50, episode step=10]
+Eval reward after 7000 steps was 50.0.
+100%|███████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 1000.07it/s, episode reward=90, episode step=10]
+Eval reward after 8000 steps was 90.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=50, episode step=10]
+Eval reward after 9000 steps was 50.0.
+100%|██████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=0, episode step=10]
+Eval reward after 10000 steps was 0.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=50, episode step=10]
+Eval reward after 11000 steps was 50.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=90, episode step=10]
+Eval reward after 12000 steps was 90.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=50, episode step=10]
+Eval reward after 13000 steps was 50.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=50, episode step=10]
+Eval reward after 14000 steps was 50.0.
+100%|████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 497.49it/s, episode reward=50, episode step=10]
+Final eval reward was: 50.0
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+qlearning
+
+100%|██████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=9, episode step=10]
+Eval reward after 0 steps was 9.0.
+100%|██████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=5, episode step=10]
+Eval reward after 1000 steps was 5.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=50, episode step=10]
+Eval reward after 2000 steps was 50.0.
+100%|████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 983.89it/s, episode reward=50, episode step=10]
+Eval reward after 3000 steps was 50.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=90, episode step=10]
+Eval reward after 4000 steps was 90.0.
+100%|███████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 1000.31it/s, episode reward=50, episode step=10]
+Eval reward after 5000 steps was 50.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=50, episode step=10]
+Eval reward after 6000 steps was 50.0.
+100%|████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 466.66it/s, episode reward=50, episode step=10]
+Eval reward after 7000 steps was 50.0.
+100%|████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 641.33it/s, episode reward=50, episode step=10]
+Eval reward after 8000 steps was 50.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=50, episode step=10]
+Eval reward after 9000 steps was 50.0.
+100%|███████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 1004.86it/s, episode reward=50, episode step=10]
+Eval reward after 10000 steps was 50.0.
+100%|████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 997.93it/s, episode reward=50, episode step=10]
+Eval reward after 11000 steps was 50.0.
+100%|███████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 1000.07it/s, episode reward=50, episode step=10]
+Eval reward after 12000 steps was 50.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=90, episode step=10]
+Eval reward after 13000 steps was 90.0.
+100%|██████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=0, episode step=10]
+Eval reward after 14000 steps was 0.0.
+100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=50, episode step=10]
+Final eval reward was: 50.0
