@@ -190,9 +190,9 @@ class MarsRover(gym.Env):
         """
         # TODO:
         if action == 0:
-            return max(0, state -1)
+            return max(0, state - 1)
         else:
-            return min(self.observation_space.n -1, state+1)
+            return min(self.observation_space.n - 1, state + 1)
 
     def get_transition_matrix(
         self,
@@ -235,8 +235,8 @@ class MarsRover(gym.Env):
                 T[s, a, s_prime_success] += p_success
 
                 # Outcome 2: Opposite action (stochastic flip)
-                s_prime_fail = self.get_next_state(s, 1-a)
-                T[s, a, s_prime_fail] += (1-p_success)
+                s_prime_fail = self.get_next_state(s, 1 - a)
+                T[s, a, s_prime_fail] += 1 - p_success
         # and the transition probabilities P.
 
         return T
