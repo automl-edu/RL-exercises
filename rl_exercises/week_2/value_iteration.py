@@ -65,13 +65,15 @@ class ValueIteration(AbstractAgent):
             return
 
         # TODO: Call value_iteration() with the MDP components
-        V_opt, pi_opt = value_iteration(T=self.T, R_sa=self.R_sa, gamma=self.gamma, seed=self.seed)
+        V_opt, pi_opt = value_iteration(
+            T=self.T, R_sa=self.R_sa, gamma=self.gamma, seed=self.seed
+        )
 
         self.V = V_opt
         self.pi = pi_opt
         printr("Converged V:", self.V)
         printr("Derived policy π:", self.pi)
-        self.policy_fitted = True 
+        self.policy_fitted = True
 
     def predict_action(
         self,
@@ -125,7 +127,7 @@ def value_iteration(
     """
     n_states, n_actions = R_sa.shape
     V = np.zeros(n_states, dtype=float)
-    rng = np.random.default_rng(seed)  
+    rng = np.random.default_rng(seed)
     # pi = None
 
     # TODO: update V using the Q values until convergence
@@ -133,25 +135,24 @@ def value_iteration(
         delta = 0
         for s in range(n_states):
             v_old = V[s]
-            q_sa = R_sa[s] + gamma * np.dot(T[s], V)    
+            q_sa = R_sa[s] + gamma * np.dot(T[s], V)
             V[s] = np.max(q_sa)
             delta = max(delta, np.abs(V[s] - v_old))
         if delta < epsilon:
             break
-        
+
     # TODO: Extract the greedy policy from V and update pi
     pi = np.zeros(n_states, dtype=int)
     for s in range(n_states):
-        q_sa = R_sa[s] + gamma * np.dot(T[s], V)  
+        q_sa = R_sa[s] + gamma * np.dot(T[s], V)
         max_q = np.max(q_sa)
         best_actions = np.where(q_sa == max_q)[0]
         pi[s] = rng.choice(best_actions)
-        
+
     return V, pi
+
 
 if __name__ == "__main__":
     env = MarsRover()
     agent = ValueIteration(env=env)
     agent.update_agent()
-    
-    

@@ -1,0 +1,16 @@
+# @package _global_
+defaults:
+  - ../agent: sarsa
+
+env_name: MarsRover
+env_kwargs: {}
+training_steps: 10000
+agent_kwargs: {
+  gamma: 0.4,
+}
+policy_kwargs: {
+  epsilon: 0.1,
+}
+batch_size: 0
+buffer_cls: SimpleBuffer
+buffer_kwargs: {}
