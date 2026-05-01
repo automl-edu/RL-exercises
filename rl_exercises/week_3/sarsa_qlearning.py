@@ -151,7 +151,22 @@ class TDAgent(AbstractAgent):
         # update the new Q value in the Q table of this class.
         # Return the new Q value --currently always returns 0.0
 
-        return 0.0
+        # Get Q(s,a)
+        q_sa = self.Q[state][action]
+
+        # Define the target for the update of the Q value
+        if done:
+            td_target = reward
+        else:
+            td_target = reward + self.gamma * self.Q[next_state][next_action]
+
+        # Update the Q value
+        new_q_sa = q_sa + self.alpha * (td_target - q_sa)
+
+        # Store the new Q value in the variable
+        self.Q[state][action] = new_q_sa
+
+        return new_q_sa
 
     def Q_Learning(
         self,
