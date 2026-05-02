@@ -22,6 +22,8 @@ from rl_exercises.agent.buffer import SimpleBuffer
 from rl_exercises.environments import ContextualMarsRover, MarsRover
 from rl_exercises.week_2.policy_iteration import PolicyIteration
 from rl_exercises.week_2.value_iteration import ValueIteration
+from rl_exercises.week_3.epsilon_greedy_policy import EpsilonGreedyPolicy
+from rl_exercises.week_3.sarsa_qlearning import TDAgent
 
 # from rl_exercises.week_4 import EpsilonGreedyPolicy as TabularEpsilonGreedyPolicy
 # from rl_exercises.week_4 import SARSAAgent
@@ -96,12 +98,29 @@ def train(cfg: DictConfig) -> float:
     """
     env = make_env(cfg.env_name, cfg.env_kwargs)
     printr(cfg)
-    if cfg.agent == "sb3":
-        return train_sb3(env, cfg)
-    elif cfg.agent == "random":
-        agent = RandomAgent(env)
-    else:
-        agent = PolicyIteration(env)
+
+    match cfg.agent:
+        case "sb3":
+            return train_sb3(env, cfg)
+
+        case "random":
+            agent = RandomAgent(env)
+        case "policy_iteration":
+            agent = PolicyIteration(env)
+        case "sarsa":
+            policy = EpsilonGreedyPolicy(env, 0.5, cfg.seed)
+            agent = TDAgent(
+                env=env, policy=policy, alpha=0.5, gamma=1, algorithm="sarsa"
+            )
+        case "qlearning":
+            policy = EpsilonGreedyPolicy(env, cfg.epsilon, cfg.seed)
+            agent = TDAgent(
+                env=env, policy=policy, alpha=0.5, gamma=1, algorithm="qlearning"
+            )
+        case _:
+            raise NotImplementedError(
+                f"The specified agent {cfg.agent} is not implemented"
+            )
 
     buffer_cls = eval(cfg.buffer_cls)
     buffer = buffer_cls(**cfg.buffer_kwargs)
