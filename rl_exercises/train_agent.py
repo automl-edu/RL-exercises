@@ -105,6 +105,10 @@ def train(cfg: DictConfig) -> float:
 
         case "random":
             agent = RandomAgent(env)
+
+        case "value_iteration":
+            agent = ValueIteration(env)
+
         case "policy_iteration":
             agent = PolicyIteration(env)
             agent.update_agent()
@@ -114,7 +118,7 @@ def train(cfg: DictConfig) -> float:
                 env=env, policy=policy, alpha=0.5, gamma=1, algorithm="sarsa"
             )
         case "qlearning":
-            policy = EpsilonGreedyPolicy(env, cfg.epsilon, cfg.seed)
+            policy = EpsilonGreedyPolicy(env, 0.5, cfg.seed)
             agent = TDAgent(
                 env=env, policy=policy, alpha=0.5, gamma=1, algorithm="qlearning"
             )
