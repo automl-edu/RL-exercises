@@ -1,0 +1,35 @@
+When training both agents,this were the findings:
+
+| Metric               | SARSA          | Q-Learning     |
+|----------------------|----------------|----------------|
+| Final Reward         | 90.0           | 50.0           |
+| Convergence Speed    | Faster         | Slower         |
+| Stability            | More stable    | More volatile  |
+| Exploration Impact   | High           | Lower          |
+
+Learning behaviour comparison:
+
+SARSA:
+    - Starts with reward=9 (initial exploration)
+    - Quickly jumps to 90 (optimal policy found early)
+    - Occasionally drops to 0 or 50 (exploration phases)
+    - Recovers quickly to 90
+
+Q-Learning:
+    - Also starts with reward=9
+    - Reaches 90 but less consistently
+    - More frequent drops to 0, 5, or 50
+
+Difference in how they approach the problem:
+
+    1. On-Policy vs Off-Policy:
+        - SARSA: Learns current policy (with exploration)
+        - Q-Learning: Learns optimal policy (ignores exploration)
+
+    2. Update Rule:
+        - SARSA: Conservative (uses actual next action)
+        - Q-Learning: Optimistic (uses max Q-value)
+
+    3. Exploration Impact:
+        - SARSA: Handles exploration better in this case
+        - Q-Learning: Suffers from overestimation (probably)
