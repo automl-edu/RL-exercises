@@ -1,0 +1,3 @@
+To run the test, we execute `python rl_exercises/train_agent.py agent=sarsa env_name=MarsRover`
+The SARSA implementation reaches a final eval reward of 90.
+Therefore, we can reach similar scores as with last week's approaches.
