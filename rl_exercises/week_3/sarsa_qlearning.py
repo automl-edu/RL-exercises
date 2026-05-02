@@ -107,7 +107,10 @@ class TDAgent(AbstractAgent):
         state, action, reward, next_state, done, _ = batch[0]
         if self.algorithm == "sarsa":
             # TODO: Get the next action for the lookahead in SARSA using the policy of this agent.
-            next_action = 0
+
+            next_action = self.policy(
+                self.Q, next_state, evaluate=False
+            )  # Use the policy to select the next action
             return self.SARSA(state, action, reward, next_state, next_action, done)
         else:
             return self.Q_Learning(state, action, reward, next_state, done)
