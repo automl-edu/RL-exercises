@@ -107,6 +107,7 @@ def train(cfg: DictConfig) -> float:
             agent = RandomAgent(env)
         case "policy_iteration":
             agent = PolicyIteration(env)
+            agent.update_agent()
         case "sarsa":
             policy = EpsilonGreedyPolicy(env, 0.5, cfg.seed)
             agent = TDAgent(
