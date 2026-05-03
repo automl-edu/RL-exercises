@@ -11,6 +11,7 @@ from rl_exercises.week_3 import EpsilonGreedyPolicy
 
 State = Any
 
+
 class TDAgent(AbstractAgent):
     """Temporal Difference Learning Agent"""
 
@@ -119,22 +120,21 @@ class TDAgent(AbstractAgent):
         done: bool,
     ) -> float:
         """Perform a TD(lambda) update with accumulating eligibility traces."""
-        
+
         for traced_state in list(self.E.keys()):
             self.E[traced_state] *= self.gamma * self.lmbda
         self.E[state][action] += 1.0
-        
+
         if done:
-            next_value = 0.0 
+            next_value = 0.0
         else:
             next_value = self.Q[next_state][next_action]
         td_error = reward + self.gamma * next_value - self.Q[state][action]
-        
+
         for traced_state, traces in self.E.items():
             self.Q[traced_state] += self.alpha * td_error * traces
-        
+
         if done:
             self.E.clear()
-        
-        return self.Q[state][action]
 
+        return self.Q[state][action]
