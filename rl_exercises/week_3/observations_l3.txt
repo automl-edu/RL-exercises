@@ -1,0 +1,25 @@
+TD(lambda) Random Walk Results
+==============================
+
+lambda=0.0
+V=[0.0, 0.292, 0.433, 0.494, 0.542, 0.64, 1.0]
+RMS error=0.1256
+
+lambda=0.3
+V=[0.0, 0.279, 0.383, 0.48, 0.565, 0.653, 1.0]
+RMS error=0.1080
+
+lambda=0.8
+V=[0.0, 0.205, 0.219, 0.404, 0.63, 0.714, 1.0]
+RMS error=0.0888
+
+lambda=1.0
+V=[0.0, 0.135, 0.092, 0.395, 0.84, 0.89, 1.0]
+RMS error=0.1438
+
+
+
+This reproduces the paper's bounded random-walk setup in simplified form.
+TD(lambda) learns state-value predictions for the probability of terminating on the right.
+Smaller lambda values bootstrap more strongly, while lambda=1 behaves more like Monte Carlo / Widrow-Hoff-style learning.
+Our exact numbers differ a bit because we use fewer seeds/episodes and a simpler online implementation.

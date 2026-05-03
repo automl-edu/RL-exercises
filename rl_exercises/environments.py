@@ -548,3 +548,52 @@ class ContextualMarsRover(MarsRover):
             self.context["left_reward"],
             self.context["right_reward"],
         )
+
+
+# Level 3 week 3 task
+class RandomWalkMarsRover(gym.Env):
+    """Sutton-style random walk: A-B-C-D-E-F-G.
+
+    Nonterminal states: 1..5
+    Terminal left: 0, reward/outcome 0
+    Terminal right: 6, reward/outcome 1
+    Start: 3
+    """
+
+    metadata = {"render_modes": ["human"]}
+
+    def __init__(self, seed: int | None = None):
+        self.rng = np.random.default_rng(seed)
+
+        self.n_states = 7
+        self.start_state = 3
+        self.position = self.start_state
+
+        self.observation_space = gym.spaces.Discrete(self.n_states)
+        self.action_space = gym.spaces.Discrete(
+            2
+        )  # unused; random walk chooses randomly
+
+    def reset(self, *, seed=None, options=None):
+        if seed is not None:
+            self.rng = np.random.default_rng(seed)
+        self.position = self.start_state
+        return self.position, {}
+
+    def step(self, action: int | None = None):
+        move_right = self.rng.random() <= 0.5
+        self.position += 1 if move_right else -1
+
+        terminated = self.position in [0, self.n_states - 1]
+
+        if self.position == 0:
+            reward = 0.0
+        elif self.position == self.n_states - 1:
+            reward = 1.0
+        else:
+            reward = 0.0
+
+        return self.position, reward, terminated, False, {}
+
+    def render(self, mode: str = "human"):
+        print(f"[RandomWalkMarsRover] pos={self.position}")
