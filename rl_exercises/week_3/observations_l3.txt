@@ -32,3 +32,18 @@ lambda | a=0.0 | a=0.05 | a=0.1 | a=0.15 | a=0.2 | a=0.25 | a=0.3 | a=0.4 | a=0.
 Interpretation:
 This recreates the paper's random-walk experiment in a simplified online implementation. The generated plots are in rl_exercises/week_3/figures/.
 The exact numbers do not need to match the paper exactly because the implementation details, seeds, and update convention may differ.
+
+
+The results qualitatively match the behavior described in the paper:
+
+- The optimal learning rate α decreases as λ increases.
+- TD(0) performs best in this low-data regime due to lower variance.
+- Larger λ values require smaller α to remain stable.
+- For large α and λ close to 1, the algorithm becomes unstable and diverges.
+
+The divergence for λ=1.0 at higher α is stronger than expected from the paper.
+This is likely due to the online TD(λ) implementation with accumulating eligibility
+traces, which differs from the batch or offline updates used in the original experiments.
+
+Overall, the experiment reproduces the key qualitative insights of the paper,
+even though exact numerical results differ due to implementation details.
