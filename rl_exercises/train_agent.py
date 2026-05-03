@@ -72,11 +72,12 @@ def train(cfg: DictConfig) -> float:
         final_eval = evaluate(env, agent, cfg.n_eval_episodes)
         print(f"Final eval reward was: {final_eval}")
         return final_eval
-    else:
+    elif cfg.agent == "sarsa" or cfg.agent == "qlearning":
         policy = EpsilonGreedyPolicy(env=env, epsilon=0.1)
         agent = TDAgent(env, policy, algorithm=cfg.agent)
         # TODO: add your agent options here
-        #raise NotImplementedError
+    else:
+        raise NotImplementedError
 
     buffer_cls = eval(cfg.buffer_cls)
     buffer = buffer_cls(**cfg.buffer_kwargs)
