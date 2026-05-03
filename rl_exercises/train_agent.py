@@ -23,6 +23,8 @@ from rl_exercises.environments import MarsRover
 from rl_exercises.week_2.policy_iteration import PolicyIteration
 from rl_exercises.week_2.value_iteration import ValueIteration
 
+from rl_exercises.week_3 import EpsilonGreedyPolicy, TDAgent
+
 # from rl_exercises.week_4 import EpsilonGreedyPolicy as TabularEpsilonGreedyPolicy
 # from rl_exercises.week_4 import SARSAAgent
 # from rl_exercises.week_5 import EpsilonGreedyPolicy, TabularQAgent, VFAQAgent
@@ -71,8 +73,10 @@ def train(cfg: DictConfig) -> float:
         print(f"Final eval reward was: {final_eval}")
         return final_eval
     else:
+        policy = EpsilonGreedyPolicy(env=env, epsilon=0.1)
+        agent = TDAgent(env, policy, algorithm=cfg.agent)
         # TODO: add your agent options here
-        raise NotImplementedError
+        #raise NotImplementedError
 
     buffer_cls = eval(cfg.buffer_cls)
     buffer = buffer_cls(**cfg.buffer_kwargs)

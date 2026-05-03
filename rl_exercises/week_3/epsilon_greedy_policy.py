@@ -57,6 +57,13 @@ class EpsilonGreedyPolicy(object):
         if evaluate:
             return int(np.argmax(Q[state]))
 
+        r = self.rng.random()
+
+        if(1 - self.epsilon > r):
+            return int(np.argmax(Q[state]))
+        else:
+            return int(self.rng.integers(self.env.action_space.n))
+
         # TODO: Implement epsilon-greedy action selection
         # With prob 1 - epsilon return the greedy action
         # Wtih prob epsilon, use the policy's RNG to select a random action
