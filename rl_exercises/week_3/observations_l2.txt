@@ -37,6 +37,26 @@ Eval reward after 14000 steps was 50.0.
 100%|████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 497.49it/s, episode reward=50, episode step=10]
 Final eval reward was: 50.0
 
+Examples from logged states
+state:  2 action:  1 Q-value:  33.1735000649475
+state:  3 action:  1 Q-value:  44.823342850930636
+state:  4 action:  0 Q-value:  46.715887137592546
+state:  3 action:  1 Q-value:  44.10160036708717
+state:  4 action:  0 Q-value:  45.40874375233986
+state:  3 action:  1 Q-value:  49.755172059713516
+state:  4 action:  0 Q-value:  47.58195790602669
+state:  3 action:  1 Q-value:  29.877586029856758
+state:  2 action:  1 Q-value:  31.525543047402127
+state:  3 action:  1 Q-value:  43.72977196794172
+state:  4 action:  0 Q-value:  45.6558649369842
+state:  3 action:  1 Q-value:  49.69281845246296
+state:  4 action:  0 Q-value:  47.67434169472358
+state:  3 action:  1 Q-value:  46.53633816785333
+state:  4 action:  0 Q-value:  47.105339931288455
+state:  3 action:  1 Q-value:  51.82083904957089
+state:  4 action:  0 Q-value:  49.463089490429674
+state:  3 action:  0 Q-value:  9.447315296685911
+
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 qlearning
@@ -74,6 +94,25 @@ Eval reward after 14000 steps was 0.0.
 100%|█████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s, episode reward=50, episode step=10]
 Final eval reward was: 50.0
 
+Examples from logged states
+state:  3 action:  1 Q-value:  60.33260956769102
+state:  4 action:  0 Q-value:  64.85180146376757
+state:  3 action:  1 Q-value:  67.59220551572929
+state:  4 action:  0 Q-value:  66.22200348974843
+state:  3 action:  1 Q-value:  71.90710450273886
+state:  4 action:  0 Q-value:  69.06455399624365
+state:  3 action:  1 Q-value:  40.95355225136943
+state:  2 action:  1 Q-value:  40.68382388562121
+state:  3 action:  1 Q-value:  60.00905312380654
+state:  4 action:  0 Q-value:  64.53680356002509
+state:  3 action:  1 Q-value:  67.27292834191582
+state:  4 action:  0 Q-value:  65.90486595097045
+state:  3 action:  1 Q-value:  71.58889714644313
+state:  4 action:  0 Q-value:  68.7468815487068
+state:  3 action:  1 Q-value:  75.16788934757497
+state:  4 action:  0 Q-value:  71.95738544814088
+state:  3 action:  1 Q-value:  42.583944673787485
+
 Both SARSA and qlearning were able to learn a useful policy for the MarsRover env. 
 In our runs both agents reached a final eval reward of 50 after 15k training steps, and both occasionally reached a higher reward of 90.
 This implies that both algorithms can solve the task to a similar degree with the current setup.
@@ -87,6 +126,9 @@ The main conceptual difference is that SARSA is on-policy: it updates its Q-valu
 This means it learns the value of the exploratory policy, including the risk caused by random exploratory actions.
 Q-learning is off-policy: it updates toward the best possible next action, regardless of the action actually taken during exploration.
 Because of this, Q-learning tends to learn a greedier target policy, while SARSA is usually more conservative when exploration can lead to bad outcomes.
+
+Also, Q-learning generelly learns higher Q-values than SARSA and therefore overestimates the value of states.
+That was also shown in the lecture video about double Q-learning.
 
 For MarsRover, both methods seem to discover reasonable behavior, but the environment remains somewhat stochastic or sensitive to exploration.
 The occasional low evaluation rewards suggest that the learned policy is not perfectly reliable yet, or that evaluating only one episode gives a noisy estimate.
