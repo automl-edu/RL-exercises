@@ -1,0 +1,41 @@
+1. EXPERIMENT SETUP
+-------------------
+The experiment evaluates the impact of 3 hyperparameters on the agent's performance:
+- Network Architecture: Small [32, 32], Medium [64, 64], Large [128, 128, 128].
+- Batch Size: 32, 64, 128.
+- Replay Buffer Size: 5000, 10000, 20000.
+
+Total configurations tested: 9.
+Training duration: 20,000 frames per configuration.
+
+2. PARAMETER ANALYSIS
+---------------------
+
+A. Impact of Network Architecture:
+- Observation: 
+    + The "small" architecture [32, 32] achieved the highest and most stable rewards (~210). 
+    + The "large" architecture [128, 128, 128] performed the worst (~180).
+- Insight: 
+    + For simple environments, deeper/wider networks increase optimization complexity and may lead to overfitting. 
+    + The model capacity must be balanced with the task's complexity.
+
+B. Impact of Batch Size:
+- Observation: 
+    + A Batch Size of 64 proved to be the sweet spot, reaching peak rewards (~250). 
+    + Batch Size 32 showed steady but slower learning. 
+    + Batch Size 128 exhibited high instability and performance drops after an initial quick start.
+- Insight: 
+    + A batch size that is too large reduces the frequency of gradient updates per frame, making the agent less responsive to the rapid changes occurring during the exploration phase.
+
+C. Impact of Replay Buffer Size:
+- Observation: 
+    + A larger buffer (20,000) showed a slight trend toward better performance compared to smaller buffers (5,000 and 10,000). 
+    + However, the performance gap was less significant than those caused by changes in batch size or network depth.
+- Insight: 
+    + While a larger buffer helps in decorrelating transitions and stabilizing training, the relatively small state space means even a moderate buffer size can sufficiently cover the necessary experience.
+
+3. KEY CONCLUSIONS
+------------------
+- Optimal Configuration: Batch Size 64, Architecture [32, 32], and Buffer Size 20,000.
+- Critical Trade-off: The balance between convergence speed and training stability is highly sensitive to Batch Size.
+- Efficiency: For simple RL control tasks, shallow networks paired with medium-sized batches offer the most efficient training path.

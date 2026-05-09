@@ -13,6 +13,7 @@ agent:
   epsilon_final:      0.01
   epsilon_decay:      500
   target_update_freq: 1000
+  hidden_sizes: null           # for week 4 level 1: experiment with network architectures
 
 train:
   num_frames:     20000   # total env steps

@@ -59,6 +59,7 @@ class DQNAgent(AbstractAgent):
         epsilon_decay: int = 500,
         target_update_freq: int = 1000,
         seed: int = 0,
+        hidden_sizes: list = None,
     ) -> None:
         """
         Initialize replay buffer, Q‐networks, optimizer, and hyperparameters.
@@ -85,6 +86,8 @@ class DQNAgent(AbstractAgent):
             How many updates between target‐network syncs.
         seed : int
             RNG seed.
+        hidden_sizes : list, optional
+            Custom network architecture. E.g., [32, 32] or [128, 128, 128].
         """
         super().__init__(
             env,
@@ -104,9 +107,9 @@ class DQNAgent(AbstractAgent):
         obs_dim = env.observation_space.shape[0]
         n_actions = env.action_space.n
 
-        # main Q‐network and frozen target
-        self.q = QNetwork(obs_dim, n_actions)
-        self.target_q = QNetwork(obs_dim, n_actions)
+        # Custom network architecture support for experimentation
+        self.q = QNetwork(obs_dim, n_actions, hidden_sizes=hidden_sizes)
+        self.target_q = QNetwork(obs_dim, n_actions, hidden_sizes=hidden_sizes)
         self.target_q.load_state_dict(self.q.state_dict())
 
         self.optimizer = optim.Adam(self.q.parameters(), lr=lr)

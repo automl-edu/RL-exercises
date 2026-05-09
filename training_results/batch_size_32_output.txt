@@ -1,0 +1,39 @@
+Frame 211, AvgReward(10): 21.10, Îµ=0.701
+Frame 335, AvgReward(10): 12.40, Îµ=0.549
+Frame 492, AvgReward(10): 15.70, Îµ=0.404
+Frame 607, AvgReward(10): 11.50, Îµ=0.323
+Frame 713, AvgReward(10): 10.60, Îµ=0.263
+Frame 823, AvgReward(10): 11.00, Îµ=0.213
+Frame 930, AvgReward(10): 10.70, Îµ=0.174
+Frame 1031, AvgReward(10): 10.10, Îµ=0.144
+Frame 1157, AvgReward(10): 12.60, Îµ=0.114
+Frame 1257, AvgReward(10): 10.00, Îµ=0.095
+Frame 1359, AvgReward(10): 10.20, Îµ=0.080
+Frame 1462, AvgReward(10): 10.30, Îµ=0.067
+Frame 1559, AvgReward(10): 9.70, Îµ=0.057
+Frame 1684, AvgReward(10): 12.50, Îµ=0.046
+Frame 1779, AvgReward(10): 9.50, Îµ=0.040
+Frame 1876, AvgReward(10): 9.70, Îµ=0.035
+Frame 1977, AvgReward(10): 10.10, Îµ=0.030
+Frame 2094, AvgReward(10): 11.70, Îµ=0.026
+Frame 2230, AvgReward(10): 13.60, Îµ=0.022
+Frame 2386, AvgReward(10): 15.60, Îµ=0.019
+Frame 2534, AvgReward(10): 14.80, Îµ=0.017
+Frame 2692, AvgReward(10): 15.80, Îµ=0.015
+Frame 2835, AvgReward(10): 14.30, Îµ=0.014
+Frame 2989, AvgReward(10): 15.40, Îµ=0.013
+Frame 3157, AvgReward(10): 16.80, Îµ=0.012
+Frame 3433, AvgReward(10): 27.60, Îµ=0.011
+Frame 4823, AvgReward(10): 139.00, Îµ=0.010
+Frame 6475, AvgReward(10): 165.20, Îµ=0.010
+Frame 8455, AvgReward(10): 198.00, Îµ=0.010
+Frame 10524, AvgReward(10): 206.90, Îµ=0.010
+Frame 12395, AvgReward(10): 187.10, Îµ=0.010
+Frame 14271, AvgReward(10): 187.60, Îµ=0.010
+Frame 15996, AvgReward(10): 172.50, Îµ=0.010
+Frame 17851, AvgReward(10): 185.50, Îµ=0.010
+Training complete.
+<frozen runpy>:128: RuntimeWarning: 'rl_exercises.week_4.dqn' found in sys.modules after import of package 'rl_exercises.week_4', but prior to execution of 'rl_exercises.week_4.dqn'; this may result in unpredictable behaviour
+D:\Python\Reinforcement Learning Uni\RL-exercises\.venv\Lib\site-packages\hydra\_internal\hydra.py:119: UserWarning: Future Hydra versions will no longer change working directory at job runtime by default.
+See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/ for more information.
+  ret = run_job(

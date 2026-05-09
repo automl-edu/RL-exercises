@@ -1,0 +1,38 @@
+Frame 280, AvgReward(10): 28.00, Îµ=0.739
+Frame 403, AvgReward(10): 12.30, Îµ=0.580
+Frame 532, AvgReward(10): 12.90, Îµ=0.450
+Frame 673, AvgReward(10): 14.10, Îµ=0.342
+Frame 782, AvgReward(10): 10.90, Îµ=0.277
+Frame 881, AvgReward(10): 9.90, Îµ=0.229
+Frame 990, AvgReward(10): 10.90, Îµ=0.186
+Frame 1088, AvgReward(10): 9.80, Îµ=0.155
+Frame 1191, AvgReward(10): 10.30, Îµ=0.128
+Frame 1288, AvgReward(10): 9.70, Îµ=0.107
+Frame 1392, AvgReward(10): 10.40, Îµ=0.089
+Frame 1493, AvgReward(10): 10.10, Îµ=0.074
+Frame 1587, AvgReward(10): 9.40, Îµ=0.063
+Frame 1691, AvgReward(10): 10.40, Îµ=0.053
+Frame 1791, AvgReward(10): 10.00, Îµ=0.046
+Frame 1890, AvgReward(10): 9.90, Îµ=0.039
+Frame 1994, AvgReward(10): 10.40, Îµ=0.034
+Frame 2132, AvgReward(10): 13.80, Îµ=0.028
+Frame 2259, AvgReward(10): 12.70, Îµ=0.024
+Frame 2386, AvgReward(10): 12.70, Îµ=0.021
+Frame 2520, AvgReward(10): 13.40, Îµ=0.018
+Frame 2690, AvgReward(10): 17.00, Îµ=0.016
+Frame 2856, AvgReward(10): 16.60, Îµ=0.014
+Frame 3036, AvgReward(10): 18.00, Îµ=0.013
+Frame 3199, AvgReward(10): 16.30, Îµ=0.012
+Frame 4619, AvgReward(10): 142.00, Îµ=0.010
+Frame 6644, AvgReward(10): 202.50, Îµ=0.010
+Frame 8312, AvgReward(10): 166.80, Îµ=0.010
+Frame 10437, AvgReward(10): 212.50, Îµ=0.010
+Frame 12485, AvgReward(10): 204.80, Îµ=0.010
+Frame 14608, AvgReward(10): 212.30, Îµ=0.010
+Frame 16738, AvgReward(10): 213.00, Îµ=0.010
+Frame 18790, AvgReward(10): 205.20, Îµ=0.010
+Training complete.
+<frozen runpy>:128: RuntimeWarning: 'rl_exercises.week_4.dqn' found in sys.modules after import of package 'rl_exercises.week_4', but prior to execution of 'rl_exercises.week_4.dqn'; this may result in unpredictable behaviour
+D:\Python\Reinforcement Learning Uni\RL-exercises\.venv\Lib\site-packages\hydra\_internal\hydra.py:119: UserWarning: Future Hydra versions will no longer change working directory at job runtime by default.
+See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/ for more information.
+  ret = run_job(
