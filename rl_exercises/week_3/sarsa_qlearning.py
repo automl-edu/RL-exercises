@@ -153,8 +153,10 @@ class TDAgent(AbstractAgent):
         if done:
             td_target = reward
         else:
-            td_target = reward + self.gamma *self.Q[next_state][next_action] 
-        self.Q[state][action] = self.Q[state][action] + self.alpha * (td_target - self.Q[state][action])
+            td_target = reward + self.gamma * self.Q[next_state][next_action]
+        self.Q[state][action] = self.Q[state][action] + self.alpha * (
+            td_target - self.Q[state][action]
+        )
 
         return self.Q[state][action]
 
@@ -196,6 +198,8 @@ class TDAgent(AbstractAgent):
         else:
             td_target = reward + self.gamma * np.max(self.Q[next_state])
 
-        self.Q[state][action] = self.Q[state][action] + self.alpha * (td_target - self.Q[state][action])
+        self.Q[state][action] = self.Q[state][action] + self.alpha * (
+            td_target - self.Q[state][action]
+        )
 
         return self.Q[state][action]

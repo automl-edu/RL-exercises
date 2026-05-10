@@ -6,15 +6,12 @@ import torch.nn as nn
 
 class QNetwork(nn.Module):
     """
-    A simple MLP mapping state → Q‐values for each action.
-
-    Architecture:
-      Input → Linear(obs_dim→hidden_dim) → ReLU
-            → Linear(hidden_dim→hidden_dim) → ReLU
-            → Linear(hidden_dim→n_actions)
+    A simple MLP mapping state → Q-values for each action.
     """
 
-    def __init__(self, obs_dim: int, n_actions: int, hidden_dim: int = 64) -> None:
+    def __init__(
+        self, obs_dim: int, n_actions: int, hidden_dim: int = 64, depth: int = 2
+    ) -> None:
         """
         Parameters
         ----------
@@ -23,20 +20,18 @@ class QNetwork(nn.Module):
         n_actions : int
             Number of discrete actions.
         hidden_dim : int
-            Hidden layer size.
+            Width of each hidden layer.
+        depth : int
+            Number of hidden layers.
         """
         super().__init__()
-        self.net = nn.Sequential(
-            OrderedDict(
-                [
-                    ("fc1", nn.Linear(obs_dim, hidden_dim)),
-                    ("relu1", nn.ReLU()),
-                    ("fc2", nn.Linear(hidden_dim, hidden_dim)),
-                    ("relu2", nn.ReLU()),
-                    ("out", nn.Linear(hidden_dim, n_actions)),
-                ]
-            )
-        )
+
+        layers = [("fc1", nn.Linear(obs_dim, hidden_dim)), ("relu1", nn.ReLU())]
+        for layer_idx in range(2, depth + 1):
+            layers.append((f"fc{layer_idx}", nn.Linear(hidden_dim, hidden_dim)))
+            layers.append((f"relu{layer_idx}", nn.ReLU()))
+        layers.append(("out", nn.Linear(hidden_dim, n_actions)))
+        self.net = nn.Sequential(OrderedDict(layers))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -50,6 +45,6 @@ class QNetwork(nn.Module):
         Returns
         -------
         torch.Tensor
-            Q‐values, shape (batch, n_actions).
+            Q-values, shape (batch, n_actions).
         """
         return self.net(x)

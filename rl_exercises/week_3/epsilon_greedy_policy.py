@@ -59,7 +59,7 @@ class EpsilonGreedyPolicy(object):
 
         r = self.rng.random()
 
-        if(1 - self.epsilon > r):
+        if 1 - self.epsilon > r:
             return int(np.argmax(Q[state]))
         else:
             return int(self.rng.integers(self.env.action_space.n))

@@ -1,0 +1,16 @@
+Level 1 observations
+
+I ran three CartPole DQN ablations for 5 seeds each and 2500 frames per seed.
+
+Configuration results (final mean reward / peak):
+- small (width=32, depth=1, buffer=2000, batch=32): 16.85 / 23.5
+- baseline (width=64, depth=2, buffer=10000, batch=32): 13.53 / 23.5
+- large (width=128, depth=3, buffer=20000, batch=64): 18.13 / 23.5
+
+All three models reached about the same highest reward (~23.5) near the beginning of training. This shows that even smaller networks can learn the basic CartPole task quickly.
+The large model performed the best overall by the end of training, with a final mean reward of 18.13. Its bigger network, larger replay buffer, and bigger batch size may have helped it learn more stable behavior over time.
+The baseline model ended with the lowest final reward (13.53). One possible reason is that its replay buffer was not large enough to keep training stable later in learning.
+The small model still achieved a fairly good final reward (16.85), close to the large model. This suggests that simply increasing network width may not improve performance much for CartPole.
+The results are somewhat unstable, so longer training and testing with multiple random seeds would give more reliable conclusions.
+
+
