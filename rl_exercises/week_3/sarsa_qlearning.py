@@ -105,10 +105,12 @@ class TDAgent(AbstractAgent):
             New Q value for the state action pair
         """
         state, action, reward, next_state, done, _ = batch[0]
+
         if self.algorithm == "sarsa":
-            # TODO: Get the next action for the lookahead in SARSA using the policy of this agent.
-            next_action = 0
+            # For SARSA, choose next action using the current policy
+            next_action = self.policy(self.Q, next_state)
             return self.SARSA(state, action, reward, next_state, next_action, done)
+
         else:
             return self.Q_Learning(state, action, reward, next_state, done)
 
@@ -123,35 +125,18 @@ class TDAgent(AbstractAgent):
     ) -> float:
         """Perform a SARSA update (on-policy)
         Q[s,a] ← Q[s,a] + alpha*[r + gamma*Q(s',a') - Q(s,a)]
-
-        Parameters
-        ----------
-        state : State
-            Current state
-        action : int
-            Action taken
-        reward : float
-            Reward received
-        next_state : State
-            Next state
-        next_action : int
-            Next action for lookahead
-        done : bool
-            Whether the episode is finished
-
-        Returns
-        -------
-        float
-            New Q value for the state action pair
         """
 
-        # SARSA update rule
-        # TODO: Implement the SARSA update rule here.
-        # Use a value of 0. for terminal states and
-        # update the new Q value in the Q table of this class.
-        # Return the new Q value --currently always returns 0.0
+        current_q = self.Q[state][action]
 
-        return 0.0
+        if done:
+            target = reward
+        else:
+            target = reward + self.gamma * self.Q[next_state][next_action]
+
+        self.Q[state][action] = current_q + self.alpha * (target - current_q)
+
+        return float(self.Q[state][action])
 
     def Q_Learning(
         self,
@@ -163,27 +148,15 @@ class TDAgent(AbstractAgent):
     ) -> float:
         """Perform a Q-Learning update (off-policy)
         Q[s,a] ← Q[s,a] + alpha*[r + gamma*max(Q(s',·)) - Q(s,a)]
-
-        Parameters
-        ----------
-        state : State
-            Current state
-        action : int
-            Action taken
-        reward : float
-            Reward received
-        next_state : State
-            Next state
-        done : bool
-            Whether the episode is finished
-
-        Returns
-        -------
-        float
-            New Q value for the state action pair
         """
 
-        # Q learning update rule
-        # TODO: Implement the Q-Learning update rule here.
+        current_q = self.Q[state][action]
 
-        return 0.0
+        if done:
+            target = reward
+        else:
+            target = reward + self.gamma * np.max(self.Q[next_state])
+
+        self.Q[state][action] = current_q + self.alpha * (target - current_q)
+
+        return float(self.Q[state][action])
