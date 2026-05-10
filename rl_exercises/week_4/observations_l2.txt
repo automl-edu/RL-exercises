@@ -1,0 +1,19 @@
+Level 2 observations: RLiable vs Plain Averages
+
+Ran the DQN with the best L1 configuration (width=128, depth=3, buffer=20000, batch=64) across 10 different random seeds for 5000 frames each.
+
+Summary statistics:
+- IQM (Interquartile Mean): 76.00 (95% CI: 58.38 - 92.00)
+- Mean: 74.90 (95% CI: 61.32 - 88.70)
+- Median: 73.20 (95% CI: 55.00 - 94.30)
+
+Key differences: RLiable vs Plain Averages
+1. IQM is slightly higher than mean, which suggests the middle 50% of runs performed a bit better than the full average. That makes IQM the better summary of typical performance.
+2. Mean and median are close, which suggests the distribution is not strongly skewed, but the gap to IQM still shows why a robust metric is useful.
+3. Using bootstrap CIs, the intervals are still fairly wide and sometimes asymmetric. This reflects substantial run-to-run variability even after averaging over 10 seeds.
+
+Confidence in results:
+- The bootstrap CIs are narrower than with fewer seeds, but they still leave meaningful uncertainty.
+- IQM remains the preferred robust metric: it downweights extremes and better represents the typical mid-range performance across seeds.
+- The individual seed trajectories show substantial differences, so reporting only a single run or plain mean would still be misleading.
+
