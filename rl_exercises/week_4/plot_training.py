@@ -17,7 +17,7 @@ CONFIGS = [
     {"name": "net_large", "overrides": "", "config": "dqn_large"},
 ]
 
-RESULTS_DIR = Path("training_results")
+RESULTS_DIR = Path(__file__).parent / "training_results"
 RESULTS_DIR.mkdir(exist_ok=True)
 
 
