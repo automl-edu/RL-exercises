@@ -1,0 +1,10 @@
+Level 2 observations
+
+1. Trajectory length matters a lot for REINFORCE.
+The learning-curve plot makes the effect very clear. With full CartPole episodes, the policy improved steadily and eventually solved the task by the end of the run. The main takeaway is that REINFORCE needs enough of each episode to preserve credit assignment, too much truncation makes the gradient signal too weak.
+
+2. The same architecture and learning rate do not transfer cleanly to LunarLander-v2.
+The LunarLander curve shows that the same two-layer policy and learning rate do not transfer cleanly. In the run here, the mean return stayed very negative.
+
+3. REINFORCE is generally much less sample efficient than DQN.
+The sample-complexity plot shows that only the full-trajectory CartPole run actually solved the task. The truncated runs never reached the solve threshold, and LunarLander as well. This fits the usual comparison with DQN from the previous exercise: REINFORCE is much noisier and usually needs more interaction before it becomes useful, while DQN tends to be more sample efficient because it reuses experience and bootstraps from value targets.

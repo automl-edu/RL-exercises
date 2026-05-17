@@ -1,0 +1,182 @@
+{
+  "cartpole_full": {
+    "effective_eval_env": "CartPole-v1",
+    "env": "CartPole-v1",
+    "episodes": 80,
+    "gamma": 0.99,
+    "hidden_size": 128,
+    "history": [
+      {
+        "episode": 20,
+        "episode_steps": 12,
+        "loss": -1.0421453714370728,
+        "mean_return": 10.0,
+        "std_return": 0.0,
+        "total_env_steps": 352
+      },
+      {
+        "episode": 40,
+        "episode_steps": 53,
+        "loss": -0.1475885510444641,
+        "mean_return": 136.2,
+        "std_return": 9.826494797230598,
+        "total_env_steps": 1295
+      },
+      {
+        "episode": 60,
+        "episode_steps": 208,
+        "loss": 3.4007668495178223,
+        "mean_return": 279.0,
+        "std_return": 26.623298067669978,
+        "total_env_steps": 3213
+      },
+      {
+        "episode": 80,
+        "episode_steps": 500,
+        "loss": -10.543891906738281,
+        "mean_return": 500.0,
+        "std_return": 0.0,
+        "total_env_steps": 8589
+      }
+    ],
+    "lr": 0.01,
+    "max_steps_per_episode": null,
+    "seed": 0,
+    "solved_step": 8589
+  },
+  "cartpole_trunc_20": {
+    "effective_eval_env": "CartPole-v1",
+    "env": "CartPole-v1",
+    "episodes": 80,
+    "gamma": 0.99,
+    "hidden_size": 128,
+    "history": [
+      {
+        "episode": 20,
+        "episode_steps": 10,
+        "loss": 0.5285009741783142,
+        "mean_return": 9.6,
+        "std_return": 0.4898979485566356,
+        "total_env_steps": 270
+      },
+      {
+        "episode": 40,
+        "episode_steps": 13,
+        "loss": 1.4884326457977295,
+        "mean_return": 10.0,
+        "std_return": 0.8944271909999159,
+        "total_env_steps": 489
+      },
+      {
+        "episode": 60,
+        "episode_steps": 10,
+        "loss": -5.124009132385254,
+        "mean_return": 9.4,
+        "std_return": 1.2,
+        "total_env_steps": 696
+      },
+      {
+        "episode": 80,
+        "episode_steps": 10,
+        "loss": 0.16390274465084076,
+        "mean_return": 9.6,
+        "std_return": 0.7999999999999999,
+        "total_env_steps": 894
+      }
+    ],
+    "lr": 0.01,
+    "max_steps_per_episode": 20,
+    "seed": 0,
+    "solved_step": null
+  },
+  "cartpole_trunc_50": {
+    "effective_eval_env": "CartPole-v1",
+    "env": "CartPole-v1",
+    "episodes": 80,
+    "gamma": 0.99,
+    "hidden_size": 128,
+    "history": [
+      {
+        "episode": 20,
+        "episode_steps": 12,
+        "loss": -1.0421453714370728,
+        "mean_return": 9.6,
+        "std_return": 0.8,
+        "total_env_steps": 352
+      },
+      {
+        "episode": 40,
+        "episode_steps": 28,
+        "loss": 1.1089062690734863,
+        "mean_return": 43.4,
+        "std_return": 9.00222194794152,
+        "total_env_steps": 1028
+      },
+      {
+        "episode": 60,
+        "episode_steps": 50,
+        "loss": 2.9216036796569824,
+        "mean_return": 243.0,
+        "std_return": 115.58892680529567,
+        "total_env_steps": 1892
+      },
+      {
+        "episode": 80,
+        "episode_steps": 24,
+        "loss": -1.6614716053009033,
+        "mean_return": 35.0,
+        "std_return": 6.985699678629192,
+        "total_env_steps": 2579
+      }
+    ],
+    "lr": 0.01,
+    "max_steps_per_episode": 50,
+    "seed": 0,
+    "solved_step": null
+  },
+  "lunarlander_same_hparams": {
+    "effective_eval_env": "LunarLander-v3",
+    "env": "LunarLander-v2",
+    "episodes": 80,
+    "gamma": 0.99,
+    "hidden_size": 128,
+    "history": [
+      {
+        "episode": 20,
+        "episode_steps": 112,
+        "loss": -5.828462600708008,
+        "mean_return": -423.6854819207466,
+        "std_return": 231.13079687833286,
+        "total_env_steps": 1996
+      },
+      {
+        "episode": 40,
+        "episode_steps": 102,
+        "loss": -3.4633917808532715,
+        "mean_return": -569.0261505570297,
+        "std_return": 147.7548175889307,
+        "total_env_steps": 3828
+      },
+      {
+        "episode": 60,
+        "episode_steps": 170,
+        "loss": 8.60106086730957,
+        "mean_return": -355.353901970782,
+        "std_return": 76.39852159128343,
+        "total_env_steps": 6994
+      },
+      {
+        "episode": 80,
+        "episode_steps": 88,
+        "loss": -12.56139087677002,
+        "mean_return": -92.93971693675073,
+        "std_return": 24.735530650574546,
+        "total_env_steps": 10271
+      }
+    ],
+    "lr": 0.01,
+    "max_steps_per_episode": null,
+    "seed": 0,
+    "solved_step": null
+  }
+}
