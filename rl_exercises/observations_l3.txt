@@ -1,0 +1,48 @@
+Level 3 Observations
+
+For Level 3, we implemented a contextual version of the MarsRover environment.
+
+The context has three features:
+- action_success_prob
+- left_goal_reward
+- right_goal_reward
+
+The action_success_prob feature changes the transition dynamics. It controls how likely it is that the rover actually executes the chosen action. The left_goal_reward and right_goal_reward features change the reward function by making either the left or right side of the environment more attractive.
+
+Contexts changed in round-robin order after every reset. We used separate training, validation, and test context sets.
+
+Results:
+
+Without visible context:
+train: 37.83
+validation: 40.27
+test: 24.67
+
+With visible context:
+train: 46.00
+validation: 46.97
+test: 16.10
+
+When the context was hidden, policy iteration learned one compromise policy:
+
+[0, 0, 1, 1, 1]
+
+This means the agent moves left in the two leftmost states and moves right from the middle and right side. Since the agent cannot observe the active context, it cannot adapt its behavior to the current transition dynamics or reward function. Instead, it learns a policy that works reasonably well on average across the training contexts.
+
+When the context was visible, policy iteration learned a separate behavior for each training context:
+
+context 0: [1, 1, 1, 1, 1]
+context 1: [0, 0, 0, 0, 0]
+context 2: [0, 0, 1, 1, 1]
+
+This improved the training and validation results. The visible-context policy achieved 46.00 on the training contexts and 46.97 on the validation contexts, compared to 37.83 and 40.27 for the hidden-context policy. This matches the main idea from the paper: context can help an agent adapt to different MDPs instead of solving only an averaged environment.
+
+However, the visible-context policy performed worse on the test set. It achieved only 16.10, while the hidden-context policy achieved 24.67. This happened because our implementation uses a tabular state representation where the context ID is encoded into the observation. The agent does not really understand the context features as numerical values. It only learns that context index 0 should use one policy, context index 1 should use another policy, and so on.
+
+This becomes a problem on the test set because the test contexts are new. Context index 0 in the test set is not the same MDP as context index 0 in the training set. Therefore, the visible-context policy can apply the wrong specialized behavior to an unseen context.
+
+This differs from the paper because the paper is interested in generalization across contexts. In the paper, the agent should use context information to generalize to new environment settings. Our policy iteration implementation is tabular and model-based, so it can solve the known training contexts exactly, but it does not learn a smooth function from context features to actions.
+
+The similarity to the paper is the use of separate training, validation, and test context sets. The results show why this split is important: good performance on the training contexts does not necessarily imply good performance on unseen test contexts.
+
+The main conclusion is that simply making context visible is not enough. The agent also needs a representation or learning algorithm that can generalize across context values. In this small tabular MarsRover setup, visible context helps on known or similar contexts, but it can hurt on shifted test contexts because the policy memorizes context IDs instead of learning the meaning of the context features.
