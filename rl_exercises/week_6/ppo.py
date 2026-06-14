@@ -1,4 +1,3 @@
-# ppo.py
 """
 On-policy Proximal Policy Optimization (PPO) with GAE, clipped surrogate objective,
 value-loss coefficient, and entropy bonus, trained for a total number of environment steps.
@@ -13,7 +12,6 @@ import gymnasium as gym
 import hydra
 import numpy as np
 import torch
-import torch.nn.functional as F
 import torch.optim as optim
 from omegaconf import DictConfig
 from rl_exercises.agent import AbstractAgent
@@ -57,6 +55,9 @@ class PPOAgent(AbstractAgent):
         vf_coef: float = 0.5,
         seed: int = 0,
         hidden_size: int = 128,
+        max_grad_norm: float = 0.5,
+        target_kl: float = 0.03,
+        value_clip_eps: float = 0.2,
     ) -> None:
         set_seed(env, seed)
 
@@ -70,11 +71,13 @@ class PPOAgent(AbstractAgent):
         self.ent_coef = ent_coef
         self.vf_coef = vf_coef
 
-        # Networks
+        self.max_grad_norm = max_grad_norm
+        self.target_kl = target_kl
+        self.value_clip_eps = value_clip_eps
+
         self.policy = Policy(env.observation_space, env.action_space, hidden_size)
         self.value_fn = ValueNetwork(env.observation_space, hidden_size)
 
-        # Combined optimizer with separate lr for actor and critic
         self.optimizer = optim.Adam(
             [
                 {"params": self.policy.parameters(), "lr": lr_actor},
@@ -126,14 +129,6 @@ class PPOAgent(AbstractAgent):
         next_values: torch.Tensor,
         dones: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        Compute Generalized Advantage Estimation.
-
-        delta_t = r_t + gamma * V(s_{t+1}) * (1 - done_t) - V(s_t)
-
-        A_t = delta_t + gamma * lambda * (1 - done_t) * A_{t+1}
-        """
-
         rewards_t = torch.tensor(rewards, dtype=torch.float32)
 
         values = values.detach().view(-1)
@@ -158,7 +153,6 @@ class PPOAgent(AbstractAgent):
         return advantages.detach(), returns.detach()
 
     def update(self, trajectory: List[Any]) -> Tuple[float, float, float]:
-        # Unpack trajectory
         states = torch.stack([torch.from_numpy(t[0]).float() for t in trajectory])
         actions = torch.tensor([t[1] for t in trajectory], dtype=torch.int64)
         old_logps = torch.stack([t[2] for t in trajectory]).detach()
@@ -166,12 +160,10 @@ class PPOAgent(AbstractAgent):
         dones = torch.tensor([t[5] for t in trajectory], dtype=torch.float32)
         next_states = torch.stack([torch.from_numpy(t[6]).float() for t in trajectory])
 
-        # Compute values and next values without gradients for GAE
         with torch.no_grad():
             values = self.value_fn(states)
             next_values = self.value_fn(next_states)
 
-        # Compute GAE advantages and critic returns
         advantages, returns = self.compute_gae(
             rewards=rewards,
             values=values,
@@ -198,17 +190,16 @@ class PPOAgent(AbstractAgent):
         last_entropy_loss = torch.tensor(0.0)
 
         for _ in range(self.epochs):
+            stop_early = False
+
             for b_states, b_actions, b_oldlogp, b_adv, b_ret in loader:
                 probs = self.policy(b_states)
                 dist = Categorical(probs=probs)
 
-                # New log probabilities for the old actions
                 new_logp = dist.log_prob(b_actions)
 
-                # PPO probability ratio
                 ratio = torch.exp(new_logp - b_oldlogp)
 
-                # Clipped surrogate objective
                 unclipped = ratio * b_adv
                 clipped = (
                     torch.clamp(
@@ -221,11 +212,21 @@ class PPOAgent(AbstractAgent):
 
                 policy_loss = -torch.mean(torch.min(unclipped, clipped))
 
-                # Value loss
                 values_pred = self.value_fn(b_states)
-                value_loss = F.mse_loss(values_pred, b_ret)
 
-                # Entropy bonus as loss term
+                values_pred_clipped = b_ret + torch.clamp(
+                    values_pred - b_ret,
+                    -self.value_clip_eps,
+                    self.value_clip_eps,
+                )
+
+                value_loss_unclipped = (values_pred - b_ret) ** 2
+                value_loss_clipped = (values_pred_clipped - b_ret) ** 2
+
+                value_loss = 0.5 * torch.mean(
+                    torch.max(value_loss_unclipped, value_loss_clipped)
+                )
+
                 entropy_loss = -dist.entropy().mean()
 
                 loss = (
@@ -236,11 +237,25 @@ class PPOAgent(AbstractAgent):
 
                 self.optimizer.zero_grad()
                 loss.backward()
+
+                torch.nn.utils.clip_grad_norm_(
+                    list(self.policy.parameters()) + list(self.value_fn.parameters()),
+                    self.max_grad_norm,
+                )
+
                 self.optimizer.step()
+
+                approx_kl = torch.mean(b_oldlogp - new_logp).detach()
+
+                if approx_kl > self.target_kl:
+                    stop_early = True
 
                 last_policy_loss = policy_loss.detach()
                 last_value_loss = value_loss.detach()
                 last_entropy_loss = entropy_loss.detach()
+
+            if stop_early:
+                break
 
         return (
             float(last_policy_loss.item()),
@@ -258,7 +273,7 @@ class PPOAgent(AbstractAgent):
         step_count = 0
 
         while step_count < total_steps:
-            state, _ = self.env.reset(seed=self.seed)
+            state, _ = self.env.reset()
             done = False
             trajectory: List[Any] = []
 
@@ -317,7 +332,7 @@ class PPOAgent(AbstractAgent):
 
         with torch.no_grad():
             for _ in range(num_episodes):
-                state, _ = eval_env.reset(seed=self.seed)
+                state, _ = eval_env.reset()
                 done = False
                 total_r = 0.0
 
@@ -373,6 +388,9 @@ def main(cfg: DictConfig) -> None:
         vf_coef=cfg.agent.vf_coef,
         seed=cfg.seed,
         hidden_size=cfg.agent.hidden_size,
+        max_grad_norm=cfg.agent.get("max_grad_norm", 0.5),
+        target_kl=cfg.agent.get("target_kl", 0.03),
+        value_clip_eps=cfg.agent.get("value_clip_eps", 0.2),
     )
 
     agent.train(

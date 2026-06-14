@@ -58,16 +58,13 @@ class ActorCriticAgent(AbstractAgent):
         self.baseline_type = baseline_type
         self.baseline_decay = baseline_decay
 
-        # Actor / policy network
         self.policy = Policy(env.observation_space, env.action_space, hidden_size)
         self.policy_optimizer = optim.Adam(self.policy.parameters(), lr=lr_actor)
 
-        # Critic / value network for value and GAE baselines
         if baseline_type in ("value", "gae"):
             self.value_fn = ValueNetwork(env.observation_space, hidden_size)
             self.value_optimizer = optim.Adam(self.value_fn.parameters(), lr=lr_critic)
 
-        # Running average baseline
         if baseline_type == "avg":
             self.running_return = 0.0
 
@@ -100,19 +97,13 @@ class ActorCriticAgent(AbstractAgent):
     def compute_advantages(
         self, states: List[np.ndarray], rewards: List[float]
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        # Discounted Monte Carlo returns
         returns = self.compute_returns(rewards)
-
-        # Batch states
         states_t = torch.tensor(np.array(states), dtype=torch.float32)
 
-        # Value estimates V(s)
-        values = self.value_fn(states_t)
+        with torch.no_grad():
+            values = self.value_fn(states_t)
 
-        # Advantage = return - value
-        advantages = returns - values.detach()
-
-        # Normalize advantages
+        advantages = returns - values
         advantages = (advantages - advantages.mean()) / (
             advantages.std(unbiased=False) + 1e-8
         )
@@ -135,22 +126,17 @@ class ActorCriticAgent(AbstractAgent):
             values = self.value_fn(states_t)
             next_values = self.value_fn(next_states_t)
 
-            # TD error:
-            # delta_t = r_t + gamma * V(s_{t+1}) * (1 - done) - V(s_t)
             deltas = rewards_t + self.gamma * next_values * (1 - dones_t) - values
 
             advantages = torch.zeros_like(rewards_t)
             gae = 0.0
 
-            # Accumulate GAE backwards
             for t in reversed(range(len(rewards))):
                 gae = deltas[t] + self.gamma * self.gae_lambda * (1 - dones_t[t]) * gae
                 advantages[t] = gae
 
-            # Return target for critic
             returns = advantages + values
 
-        # Normalize advantages
         advantages = (advantages - advantages.mean()) / (
             advantages.std(unbiased=False) + 1e-8
         )
@@ -163,7 +149,6 @@ class ActorCriticAgent(AbstractAgent):
     ) -> Tuple[float, float]:
         states, actions, rewards, next_states, dones, log_probs = zip(*trajectory)
 
-        # Select baseline / advantage method
         if self.baseline_type == "gae":
             adv, ret = self.compute_gae(
                 list(states),
@@ -181,13 +166,9 @@ class ActorCriticAgent(AbstractAgent):
         elif self.baseline_type == "avg":
             ret = self.compute_returns(list(rewards))
 
-            # Advantage = return - running average baseline
             adv = ret - self.running_return
-
-            # Normalize advantages
             adv = (adv - adv.mean()) / (adv.std(unbiased=False) + 1e-8)
 
-            # Update running average baseline
             mean_return = float(ret.mean().item())
             self.running_return = (
                 self.baseline_decay * self.running_return
@@ -195,11 +176,9 @@ class ActorCriticAgent(AbstractAgent):
             )
 
         else:
-            # No learned baseline, only normalized returns
             ret = self.compute_returns(list(rewards))
             adv = (ret - ret.mean()) / (ret.std(unbiased=False) + 1e-8)
 
-        # Policy update
         logp_t = torch.stack(log_probs)
         policy_loss = -(logp_t * adv.detach()).mean()
 
@@ -209,7 +188,6 @@ class ActorCriticAgent(AbstractAgent):
             policy_loss.backward()
             self.policy_optimizer.step()
 
-        # Critic update
         if self.baseline_type in ("value", "gae"):
             states_t = torch.tensor(np.array(states), dtype=torch.float32)
             vals = self.value_fn(states_t)
