@@ -60,7 +60,7 @@ class TDAgent(AbstractAgent):
         self.policy = policy
 
     def predict_action(
-        self, state: np.array, info: dict = {}, evaluate: bool = False
+        self, state: np.array, info: dict | None = None, evaluate: bool = False
     ) -> Any:  # type: ignore # noqa
         """Predict the action for a given state"""
         return self.policy(self.Q, state, evaluate=evaluate), info
@@ -107,7 +107,7 @@ class TDAgent(AbstractAgent):
         state, action, reward, next_state, done, _ = batch[0]
         if self.algorithm == "sarsa":
             # TODO: Get the next action for the lookahead in SARSA using the policy of this agent.
-            next_action = self.policy(self.Q, next_state)  # type: ignore
+            next_action = self.policy(self.Q, next_state) if not done else 0
             return self.SARSA(state, action, reward, next_state, next_action, done)
         else:
             return self.Q_Learning(state, action, reward, next_state, done)
@@ -193,5 +193,9 @@ class TDAgent(AbstractAgent):
 
         # Q learning update rule
         # TODO: Implement the Q-Learning update rule here.
-
-        return 0.0
+        current_q_value = self.Q[state][action]
+        next_q_value = 0.0 if done else np.max(self.Q[next_state])
+        delta = (reward + self.gamma * next_q_value) - current_q_value
+        self.Q[state][action] = current_q_value + self.alpha * delta        
+        
+        return self.Q[state][action]

@@ -1,0 +1,31 @@
+Q1: How does the length of the trajectories affect the training?
+-------------------
+Answer:
+
+The length of the trajectories significantly impacts the training in primarily three ways: 
+
+1. High Variance: Longer trajectories accumulate more random state transitions and actions. This causes the calculated return (Gt) to have a very high variance, making the gradient updates less stable and the learning process.
+2. The Credit Assignment Problem: In very long trajectory, it's harder for agent to identify which action was responsible for a good or bad outcome at the end of the episode. 
+3. Update Frequency: Longer trajectories means fewer updates over the same amount of interaction steps. Thus, it can slow down the initial learning phase compared to algorithms that update at every step.
+
+Q2: Does the same network architecture and learning rate work for `LunarLander-v2`?
+-------------------
+Setup: In this question I had to use LunarLander-v3 instead, beacause v2 is deprecated in the recent version of gymnasium.
+
+Answer:
+
+The exact same hyperparameters do not work well for this environments. 
+
+Example:
+
+While the agent occasionally achieves good returns (e.g., reaching over 200 points around Episode 810), the learning process is highly unstable.
+The evaluation scores repeatedly crash after reaching a peak (for example, dropping from an AvgReturn of 190.2 at Ep 900 down to -28.3 at Ep 950) and exhibit massive standard deviations.
+
+Q3: How is the sample complexity (how many steps it takes to solve the environment) of this algorithm related to the DQN from the last exercise?
+-------------------
+
+Answer:
+
+The sample complexity of the REINFORCE algorithm is significantly higher than that of DQN.
+DQN achieved high stable rewards within just ~10,000 frames. Meanwhile, REINFORCE required hundreds of episodes (tens of thousands of frames) to reach a similar peak, and it frequently forgot its policy and crashed back to low scores.
+This happens because DQN is off-policy and reuses past data via an Experience Replay buffer, making it very sample efficient. In contrast, REINFORCE is on-policy and discards trajectory data immediately after a single update.
