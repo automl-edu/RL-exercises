@@ -189,6 +189,13 @@ class MarsRover(gym.Env):
             The resulting state.
         """
         # TODO: Implement the environment dynamics to determine the next state
+        if action == 0:  # go left
+            if state > 0:
+                state -= 1
+        elif action == 1:  # go right
+            if state < self.observation_space.n - 1:
+                state += 1
+
         return state
 
     def get_transition_matrix(
@@ -222,6 +229,10 @@ class MarsRover(gym.Env):
         T = np.zeros((nS, nA, nS), dtype=float)
         # TODO: Determine the transition matrix using the get_next_state function
         # and the transition probabilities P.
+        for s in range(nS):
+            for a in range(nA):
+                T[s, a, self.get_next_state(s, a)] += self.P[s, a]
+                T[s, a, self.get_next_state(s, 1 - a)] += 1 - self.P[s, a]
 
         return T
 
@@ -236,6 +247,223 @@ class MarsRover(gym.Env):
         """
         print(f"[MarsRover] pos={self.position}, steps={self.current_steps}")
 
+class ContextualMarsRover(MarsRover):
+    """
+    MarsRover with hidden or observed context.
+
+    Context features:
+    - action_success_prob: probability that the commanded action is executed
+    - left_goal_reward: reward at the leftmost state
+    - right_goal_reward: reward at the rightmost state
+
+    If context_visible=True, the observation is encoded as:
+        obs = context_id * n_positions + position
+
+    If context_visible=False, the agent only observes position.
+    """
+
+    def __init__(
+        self,
+        contexts: list[dict[str, float]],
+        context_visible: bool = False,
+        context_change: str = "round_robin",
+        horizon: int = 10,
+        seed: int | None = None,
+    ):
+        self.contexts = contexts
+        self.context_visible = context_visible
+        self.context_change = context_change
+        self.context_id = -1
+        self.n_positions = 5
+
+        first_context = contexts[0]
+        transition_probabilities, rewards = self._context_to_mdp(first_context)
+
+        super().__init__(
+            transition_probabilities=transition_probabilities,
+            rewards=rewards,
+            horizon=horizon,
+            seed=seed,
+        )
+
+        if self.context_visible:
+            self.observation_space = gym.spaces.Discrete(
+                len(self.contexts) * self.n_positions
+            )
+            self.states = np.arange(self.observation_space.n)
+        else:
+            self.observation_space = gym.spaces.Discrete(self.n_positions)
+            self.states = np.arange(self.n_positions)
+
+        self.actions = np.arange(2)
+        self.transition_matrix = self.T = self.get_transition_matrix()
+
+    # Convert one context into the transition probabilities and rewards
+    # needed by the tabular planning algorithms.
+    def _context_to_mdp(
+        self, context: dict[str, float]
+    ) -> tuple[np.ndarray, list[float]]:
+        action_success_prob = float(context["action_success_prob"])
+        right_goal_reward = float(context["right_goal_reward"])
+        left_goal_reward = float(context["left_goal_reward"])
+
+        transition_probabilities = np.full(
+            (self.n_positions, 2),
+            action_success_prob,
+            dtype=float,
+        )
+
+        rewards = [left_goal_reward, 0.0, 0.0, 0.0, right_goal_reward]
+        return transition_probabilities, rewards
+
+    # We rotate through the context list after every reset.
+    def _advance_context(self) -> None:
+        if self.context_change != "round_robin":
+            raise ValueError(f"Unknown context_change: {self.context_change}")
+
+        self.context_id = (self.context_id + 1) % len(self.contexts)
+        self.P, self.rewards = self._context_to_mdp(self.contexts[self.context_id])
+
+    # If context is visible, each context gets its own copy of the 5 positions.
+    def _encode_obs(self, position: int, context_id: int | None = None) -> int:
+        if not self.context_visible:
+            return position
+
+        if context_id is None:
+            context_id = self.context_id
+
+        return context_id * self.n_positions + position
+
+    def _decode_obs(self, obs: int) -> tuple[int, int]:
+        if self.context_visible:
+            context_id = obs // self.n_positions
+            position = obs % self.n_positions
+            return context_id, position
+
+        return self.context_id, obs
+
+    def reset(self, *, seed=None, options=None):
+        self.current_steps = 0
+        self.position = 2
+        self._advance_context()
+        return self._encode_obs(self.position), {"context": self.contexts[self.context_id]}
+
+    def step(self, action: int):
+        action = int(action)
+        if not self.action_space.contains(action):
+            raise RuntimeError(f"{action} is not a valid action")
+
+        self.current_steps += 1
+
+        p = float(self.P[self.position, action])
+        follow = self.rng.random() < p
+        a_used = action if follow else 1 - action
+
+        self.position = self._move_position(self.position, a_used)
+
+        reward = float(self.rewards[self.position])
+        terminated = False
+        truncated = self.current_steps >= self.horizon
+
+        return (
+            self._encode_obs(self.position),
+            reward,
+            terminated,
+            truncated,
+            {"context": self.contexts[self.context_id]},
+        )
+
+    # Keep movement bounded to the 5 physical rover positions.
+    def _move_position(self, position: int, action: int) -> int:
+        if action == 0:
+            return max(0, position - 1)
+
+        if action == 1:
+            return min(self.n_positions - 1, position + 1)
+
+        raise RuntimeError(f"{action} is not a valid action")
+
+    def get_next_state(self, state: int, action: int) -> int:
+        context_id, position = self._decode_obs(state)
+        next_position = self._move_position(position, action)
+
+        if self.context_visible:
+            return self._encode_obs(next_position, context_id)
+
+        return next_position
+
+    def get_transition_matrix(self, S=None, A=None, P=None):
+        if self.context_visible:
+            return self._get_context_visible_transition_matrix()
+
+        return self._get_context_hidden_transition_matrix()
+
+    # With visible context, the transition matrix keeps contexts separated.
+    def _get_context_visible_transition_matrix(self):
+        nS = len(self.contexts) * self.n_positions
+        nA = 2
+        T = np.zeros((nS, nA, nS), dtype=float)
+
+        for c_id, context in enumerate(self.contexts):
+            P, _ = self._context_to_mdp(context)
+
+            for pos in range(self.n_positions):
+                s = self._encode_obs(pos, c_id)
+
+                for a in range(nA):
+                    intended = self._move_position(pos, a)
+                    flipped = self._move_position(pos, 1 - a)
+
+                    T[s, a, self._encode_obs(intended, c_id)] += P[pos, a]
+                    T[s, a, self._encode_obs(flipped, c_id)] += 1.0 - P[pos, a]
+
+        return T
+
+    # Without context in the observation, the agent plans on the average MDP.
+    def _get_context_hidden_transition_matrix(self):
+        nS = self.n_positions
+        nA = 2
+        T = np.zeros((nS, nA, nS), dtype=float)
+
+        for context in self.contexts:
+            P, _ = self._context_to_mdp(context)
+
+            for s in range(nS):
+                for a in range(nA):
+                    intended = self._move_position(s, a)
+                    flipped = self._move_position(s, 1 - a)
+
+                    T[s, a, intended] += P[s, a] / len(self.contexts)
+                    T[s, a, flipped] += (1.0 - P[s, a]) / len(self.contexts)
+
+        return T
+
+    # Policy iteration needs expected rewards for every state-action pair.
+    def get_reward_per_action(self):
+        T = self.get_transition_matrix()
+        nS, nA, _ = T.shape
+        R = np.zeros((nS, nA), dtype=float)
+
+        for s in range(nS):
+            for a in range(nA):
+                for next_s in range(nS):
+                    if self.context_visible:
+                        c_id, next_pos = self._decode_obs(next_s)
+                        _, rewards = self._context_to_mdp(self.contexts[c_id])
+                    else:
+                        next_pos = next_s
+                        rewards = np.mean(
+                            [
+                                self._context_to_mdp(context)[1][next_pos]
+                                for context in self.contexts
+                            ]
+                        )
+                        R[s, a] += T[s, a, next_s] * rewards
+                        continue
+
+                    R[s, a] += T[s, a, next_s] * rewards[next_pos]
+
+        return R
 
 class MarsRoverPartialObsWrapper(gym.Wrapper):
     """

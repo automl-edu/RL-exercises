@@ -1,0 +1,5 @@
+When only step() is available, the environment becomes a black box.
+
+Policy Iteration and Value Iteration require full knowledge of transition probabilities P(s'|s,a) and rewards R(s,a) to compute expectations. Without this information, these methods cannot be applied directly.
+
+With step(), we only observe samples (s, a, r, s'), not the full dynamics.
