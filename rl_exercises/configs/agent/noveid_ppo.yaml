@@ -1,0 +1,37 @@
+# configs/agent/noveid_ppo.yaml
+# Hydra configuration for NovelDPPOAgent training.
+
+env:
+  name: LunarLander-v3
+
+seed: 0
+
+agent:
+  lr_actor: 5e-4
+  lr_critic: 1e-3
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_eps: 0.2
+  epochs: 4
+  batch_size: 64
+  ent_coef: 0.01
+  vf_coef: 0.5
+  hidden_size: 128
+
+rnd:
+  hidden_size: 128
+  n_layers: 2
+  update_proportion: 0.25  # fraction of minibatch used to train RND predictor
+
+noveld:
+  alpha: 1.0          # scaling factor for novelty(s_t) in the NovelD difference
+  combined_lr: 1e-4   # learning rate for the single combined optimizer
+  int_coef: 1.0       # weight of intrinsic advantages in combined advantage
+  ext_coef: 2.0       # weight of extrinsic advantages in combined advantage
+  int_gamma: 0.99     # discount factor for the intrinsic reward stream
+  num_iterations_obs_norm_init: 50  # warm-up episodes for obs/reward normalization
+
+train:
+  total_steps: 20000
+  eval_interval: 10000
+  eval_episodes: 5
