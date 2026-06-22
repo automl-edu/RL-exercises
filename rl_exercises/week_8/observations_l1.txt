@@ -1,0 +1,13 @@
+For this experiment, I used PPO on CartPole-v1 and compared the results when using a low (3), medium (10), and large (30) number of seeds.
+
+With only 3 seeds, the training curves showed a lot of fluctuations and the mean, median, and IQM sometimes differed quite noticeably. This showed that individual runs can have a large influence on the results, so conclusions based on only a few seeds can be misleading.
+
+When increasing the number of seeds to 10, the curves became smoother and the differences between the metrics became smaller. The overall performance was more consistent and less affected by individual runs.
+
+Using 30 seeds produced the most stable results. The mean, median, and IQM curves were very similar and almost completely overlapped after around 40k environment steps. This suggests that using more seeds gives a more reliable estimate of the actual performance of the algorithm.
+
+I also noticed that the mean was more sensitive to unusually good or bad runs, while the median was more robust. The IQM behaved similarly to the median and seemed to provide a good balance between the two.
+
+In all three cases, PPO eventually solved CartPole-v1 and reached the maximum return of 500. Because of this, the final performance for the low and medium seed settings was identical across all runs, which resulted in a standard deviation and confidence interval of zero. For the large seed setting, there was still a small amount of variation, with a standard deviation of about 8.3 and a 95% confidence interval of approximately ±3.
+
+Overall, these experiments showed that increasing the number of seeds reduces the effect of randomness and makes the evaluation more trustworthy. Even though the metrics differed during the early stages of training, they converged to very similar values once the agent had learned to solve the environment.
