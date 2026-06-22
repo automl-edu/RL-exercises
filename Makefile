@@ -74,6 +74,9 @@ test-week-7:
 test-week-8:
 	$(PYTEST) ${TESTS_DIR}/week_8
 
+test-week-9:
+	$(PYTEST) ${TESTS_DIR}/week_9
+
 clean-build:
 	$(PYTHON) setup.py clean
 	rm -rf ${DIST}
