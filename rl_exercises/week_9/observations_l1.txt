@@ -1,0 +1,33 @@
+1.1 Sample Efficiency
+
+Experiment Setup:
+PPO and Dyna-PPO were trained using the same real environment step budget of 15,000 steps. Results were averaged over 5 random seeds.
+
+Results:
+PPO achieved a final average return of approximately 390, while Dyna-PPO achieved approximately 350 after 15,000 real environment steps.
+
+How many steps sooner does Dyna-PPO reach 80% of the final PPO return?
+The final PPO return was approximately 390, therefore the 80% threshold is approximately 312.
+PPO reached this threshold at around 10,000 real environment steps.
+Dyna-PPO reached this threshold at around 14,500 real environment steps.
+Therefore, Dyna-PPO reached 80% of the final PPO performance approximately 4,500 real environment steps later than PPO and did not improve sample efficiency in this experiment.
+
+Is there an initial model learning penalty?
+Yes. Dyna-PPO performed significantly worse than PPO during the early stages of training. At 5,000 real environment steps, PPO achieved an average return of approximately 220, while Dyna-PPO achieved only around 50. This indicates a strong initial model learning penalty caused by inaccurate model predictions during early training.
+
+Conclusion:
+In this experiment, PPO outperformed Dyna-PPO throughout training. Dyna-PPO showed a strong initial learning penalty and higher variance across runs, suggesting that the learned dynamics model did not provide a sample efficiency advantage under the chosen settings.
+
+
+1.2 Model Prediction Accuracy
+One-Step Prediction Error:
+The one-step prediction error remained very low throughout training, with state prediction MSE values around 2×10−5 to 3×10−5. The dynamics model learned accurate short-term predictions early in training.
+
+Around what MSE threshold does Dyna-PPO begin to outperform PPO?
+In this experiment, Dyna-PPO never outperformed PPO. Therefore, no reliable MSE threshold could be identified. The results suggest that low one-step prediction error alone is insufficient to guarantee improved policy performance.
+
+Multi-Step Prediction Error
+The multi-step prediction error increased rapidly with prediction horizon during early training. At 2500 training steps, the error grew from approximately 0.1 at one step to more than 10 at longer horizons. At 15000 training steps, the error remained substantially lower but still increased with prediction horizon.
+
+How fast does Ek grow and what does that imply for imag_horizon?
+The multi-step prediction error grows rapidly as the prediction horizon increases. Although one-step predictions are highly accurate, prediction errors accumulate over multiple rollout steps. The results suggest that shorter imagination horizons of approximately 3-5 steps would likely provide a better trade-off between additional training data and model error accumulation.

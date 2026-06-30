@@ -104,6 +104,10 @@ class DynaPPOAgent(PPOAgent):
         self.imagination_steps = 0
         self.total_episodes = 0
 
+        self.eval_returns = []
+        self.model_metrics = []
+        self.multistep_errors = []
+
         if self.use_model:
             # Initialize dynamics model and optimizer
             obs_dim = int(np.prod(env.observation_space.shape))
@@ -158,9 +162,22 @@ class DynaPPOAgent(PPOAgent):
 
             # TODO: Predict next state delta and reward using the model
             # TODO: Compute loss for state prediction and reward prediction
-            loss_s = ...
-            loss_r = ...
-            loss = ...
+            states = torch.FloatTensor(np.array(states))
+            next_states = torch.FloatTensor(np.array(next_states))
+            rewards = torch.FloatTensor(rewards)
+            actions = torch.LongTensor(actions)
+
+            a_onehot = torch.nn.functional.one_hot(
+                actions, num_classes=self.env.action_space.n
+            ).float()
+
+            target_delta = next_states - states
+
+            pred_delta, pred_reward = self.model(states, a_onehot)
+
+            loss_s = torch.nn.functional.mse_loss(pred_delta, target_delta)
+            loss_r = torch.nn.functional.mse_loss(pred_reward, rewards)
+            loss = loss_s + loss_r
 
             self.model_opt.zero_grad()
             loss.backward()
@@ -195,16 +212,35 @@ class DynaPPOAgent(PPOAgent):
             }
 
         # TODO: Sample a batch of transitions from the replay buffer
-        val_batch = ...
+        val_batch = random.sample(
+            self.real_buffer, min(num_samples, len(self.real_buffer))
+        )
         states, actions, rewards, next_states, _ = zip(*val_batch)
 
         # TODO: Compute MSE (L2) and MAE (L1) for both state and reward predictions
         with torch.no_grad():
             # Calculate metrics
-            state_mse = ...
-            reward_mse = ...
-            state_mae = ...
-            reward_mae = ...
+            states = torch.FloatTensor(np.array(states))
+            next_states = torch.FloatTensor(np.array(next_states))
+            rewards = torch.FloatTensor(rewards)
+            actions = torch.LongTensor(actions)
+
+            a_onehot = torch.nn.functional.one_hot(
+                actions, num_classes=self.env.action_space.n
+            ).float()
+
+            target_delta = next_states - states
+
+            pred_delta, pred_reward = self.model(states, a_onehot)
+
+            pred_next = states + pred_delta
+
+            state_mse = torch.mean((pred_next - next_states) ** 2).item()
+            reward_mse = torch.mean((pred_reward - rewards) ** 2).item()
+
+            state_mae = torch.mean(torch.abs(pred_next - next_states)).item()
+
+            reward_mae = torch.mean(torch.abs(pred_reward - rewards)).item()
 
         return {
             "state_mse": state_mse,
@@ -235,17 +271,20 @@ class DynaPPOAgent(PPOAgent):
             # TODO: Simulate a trajectory using the model
             for step in range(self.imag_horizon):
                 # TODO: Predict action, log-probability, entropy, and value from the PPO policy
-                action, logp, ent, val = ...
+                action, logp, ent, val = self.predict(s)
 
                 # TODO: Prepare model input tensors
-                a_oh = ...  # noqa: F841
-                s_t = ...  # noqa: F841
+                a_oh = torch.nn.functional.one_hot(
+                    torch.tensor([action]), num_classes=self.env.action_space.n
+                ).float()
+
+                s_t = torch.FloatTensor(s).unsqueeze(0)
 
                 # TODO: Predict next state delta and reward
                 with torch.no_grad():  # Don't track gradients during imagination
-                    delta, r_pred = ...
-                    s2 = ...
-                    r_val = ...
+                    delta, r_pred = self.model(s_t, a_oh)
+                    s2 = (s_t + delta).squeeze(0).numpy()
+                    r_val = r_pred.item()
 
                 # Add some termination probability to make rollouts more realistic
                 done_prob = 0.05  # 5% chance of termination per step
@@ -421,8 +460,9 @@ class DynaPPOAgent(PPOAgent):
 
             # TODO: Collect one real trajectory (episode)
             while not done and self.real_steps < total_steps:
-                action, logp, ent, val = ...
-                next_state, reward, term, trunc, _ = ...
+                action, logp, ent, val = self.predict(state)
+                next_state, reward, term, trunc, _ = self.env.step(action)
+
                 done = term or trunc
                 real_traj.append(
                     (state, action, logp, ent, reward, float(done), next_state)
@@ -434,6 +474,9 @@ class DynaPPOAgent(PPOAgent):
                 # Evaluation
                 if self.real_steps % eval_interval == 0:
                     mean_r, std_r = self.evaluate(eval_env, num_episodes=eval_episodes)
+                    self.eval_returns.append(
+                        {"steps": self.real_steps, "return": mean_r}
+                    )
                     stats = self.get_step_statistics()
                     if self.use_model:
                         print(
@@ -453,6 +496,19 @@ class DynaPPOAgent(PPOAgent):
                         f"[Model] Step {self.real_steps:6d} State MSE: {model_metrics['state_mse']:.4f}, "
                         f"Reward MSE: {model_metrics['reward_mse']:.4f}"
                     )
+                    self.model_metrics.append(
+                        {
+                            "steps": self.real_steps,
+                            "state_mse": model_metrics["state_mse"],
+                            "reward_mse": model_metrics["reward_mse"],
+                        }
+                    )
+
+                    Ek = self.evaluate_multistep()
+
+                    self.multistep_errors.append(
+                        {"steps": self.real_steps, "errors": Ek}
+                    )
 
                 # Save checkpoint
                 if self.real_steps % save_interval == 0:
@@ -464,7 +520,7 @@ class DynaPPOAgent(PPOAgent):
             self.total_episodes += 1
 
             # TODO: Perform PPO update on real transitions
-            policy_loss, value_loss, entropy_loss = ...
+            policy_loss, value_loss, entropy_loss = self.update(real_traj)
             last_return = sum(r for *_, r, _, _ in real_traj)
 
             # 2) Model-based steps if enabled
@@ -474,8 +530,11 @@ class DynaPPOAgent(PPOAgent):
             # TODO: If using model, train it and perform imagined updates
             if self.use_model:
                 self.store_real(real_traj)
-                model_state_loss, model_reward_loss = ...
-                imag_policy_loss, imag_value_loss, imag_entropy_loss = ...
+                model_state_loss, model_reward_loss = self.train_model()
+
+                imag_policy_loss, imag_value_loss, imag_entropy_loss = (
+                    self.imagine_and_update()
+                )
 
             # Unified logging with step tracking
             stats = self.get_step_statistics()
@@ -506,6 +565,53 @@ class DynaPPOAgent(PPOAgent):
             f"Imagination steps: {final_stats['imagination_steps']}, "
             f"Total episodes: {final_stats['total_episodes']}"
         )
+
+        import pickle
+
+        results = {
+            "returns": self.eval_returns,
+            "model_metrics": self.model_metrics,
+            "multistep": self.multistep_errors,
+        }
+
+        with open(f"results_seed_{self.seed}.pkl", "wb") as f:
+            pickle.dump(results, f)
+
+    def evaluate_multistep(self, horizon=20, num_trajs=100):
+
+        errors = []
+
+        for k in range(1, horizon + 1):
+            mse = []
+
+            for _ in range(num_trajs):
+                idx = random.randint(0, len(self.real_buffer) - k - 1)
+
+                s, _, _, _, _ = self.real_buffer[idx]
+
+                pred = s.copy()
+
+                for j in range(k):
+                    _, a, _, _, _ = self.real_buffer[idx + j]
+
+                    s_t = torch.FloatTensor(pred).unsqueeze(0)
+
+                    a_oh = torch.nn.functional.one_hot(
+                        torch.tensor([a]), num_classes=self.env.action_space.n
+                    ).float()
+
+                    with torch.no_grad():
+                        delta, _ = self.model(s_t, a_oh)
+
+                    pred = (s_t + delta).squeeze(0).numpy()
+
+                true_state = self.real_buffer[idx + k][0]
+
+                mse.append(np.mean((pred - true_state) ** 2))
+
+            errors.append(np.mean(mse))
+
+        return errors
 
 
 @hydra.main(config_path="../configs/agent/", config_name="dyna_ppo", version_base="1.1")
@@ -544,7 +650,7 @@ def main(cfg: DictConfig) -> None:
         cfg.train.total_steps,
         cfg.train.eval_interval,
         cfg.train.eval_episodes,
-        cfg.train.get("model_eval_interval", 50000),
+        cfg.train.get("model_eval_interval", 2500),
         cfg.train.get("save_interval", 100000),
         cfg.train.get("save_dir", "./checkpoints"),
     )

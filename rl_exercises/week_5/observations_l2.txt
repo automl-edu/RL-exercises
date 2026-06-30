@@ -1,0 +1,9 @@
+For Level 2, I tested REINFORCE on CartPole-v1 with different training lengths. Short training runs often did not produce stable learning because REINFORCE has high variance and updates the policy only after a complete trajectory. With more episodes, the policy sometimes improved, but the results were still noisy.
+
+The length of trajectories affects training because longer episodes provide more rewards and more log probabilities for the policy update. In CartPole, longer trajectories usually mean that the agent is already behaving better. However, longer trajectories can also increase the variance of the return estimates, which makes REINFORCE unstable compared to value-based methods.
+
+I also tested whether the same architecture and learning rate work for LunarLander. The same settings that are acceptable for CartPole do not necessarily work well for LunarLander. LunarLander is more difficult because the state and reward structure are more complex and the agent has to learn a more precise control strategy. Therefore, it likely needs more episodes, different learning rates, and possibly a different network size.
+
+Compared to DQN from Week 4, REINFORCE is less sample efficient. DQN uses a replay buffer and can reuse previous transitions many times, while REINFORCE uses on-policy trajectories and updates only from the most recent episode. This means REINFORCE usually needs more interaction with the environment to reach good performance.
+
+Overall, REINFORCE is conceptually simple and directly optimizes the policy, but it is noisy and sensitive to hyperparameters. DQN was more sample efficient in my experiments because it reused experience and learned a value function with bootstrapping.

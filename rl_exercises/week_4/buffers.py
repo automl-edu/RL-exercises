@@ -13,14 +13,10 @@ class ReplayBuffer(AbstractBuffer):
     """
 
     def __init__(self, capacity: int) -> None:
-        """
-        Parameters
-        ----------
-        capacity : int
-            Maximum number of transitions to store.
-        """
         super().__init__()
+
         self.capacity = capacity
+
         self.states: List[np.ndarray] = []
         self.actions: List[int] = []
         self.rewards: List[float] = []
@@ -37,30 +33,7 @@ class ReplayBuffer(AbstractBuffer):
         done: bool,
         info: dict,
     ) -> None:
-        """
-        Add a single transition to the buffer.
-
-        If the buffer is full, the oldest transition is removed.
-
-        Parameters
-        ----------
-        state : np.ndarray
-            Observation before action.
-        action : int or float
-            Action taken.
-        reward : float
-            Reward received.
-        next_state : np.ndarray
-            Observation after action.
-        done : bool
-            Whether episode terminated/truncated.
-        info : dict
-            Gym info dict (can store extras).
-        """
         if len(self.states) >= self.capacity:
-            # TODO: pop the oldest element off each list (states, actions, …, infos)
-            # pop oldest
-            # return
             self.states.pop(0)
             self.actions.pop(0)
             self.rewards.pop(0)
@@ -68,32 +41,22 @@ class ReplayBuffer(AbstractBuffer):
             self.dones.pop(0)
             self.infos.pop(0)
 
-        # TODO: append state, action, reward, next_state, done, info to their respective lists
         self.states.append(state)
-        self.actions.append(action)
-        self.rewards.append(reward)
+        self.actions.append(int(action))
+        self.rewards.append(float(reward))
         self.next_states.append(next_state)
-        self.dones.append(done)
+        self.dones.append(bool(done))
         self.infos.append(info)
 
     def sample(
         self, batch_size: int = 32
     ) -> List[Tuple[Any, Any, float, Any, bool, Dict]]:
-        """
-        Uniformly sample a batch of transitions.
+        idxs = np.random.choice(
+            len(self.states),
+            size=batch_size,
+            replace=False,
+        )
 
-        Parameters
-        ----------
-        batch_size : int
-            Number of transitions to sample.
-
-        Returns
-        -------
-        List of transitions as (state, action, reward, next_state, done, info).
-        """
-        # TODO: randomly choose `batch_size` unique indices from [0, len(self.states))
-        # idx = ...
-        idxs = np.random.choice(len(self.states), batch_size, replace=False)
         return [
             (
                 self.states[i],
@@ -107,5 +70,4 @@ class ReplayBuffer(AbstractBuffer):
         ]
 
     def __len__(self) -> int:
-        """Current number of stored transitions."""
         return len(self.states)

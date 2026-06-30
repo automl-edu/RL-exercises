@@ -268,17 +268,22 @@ class PPOAgent(AbstractAgent):
         total_steps: int,
         eval_interval: int = 10000,
         eval_episodes: int = 5,
-    ) -> None:
+    ):
         eval_env = gym.make(self.env.spec.id)
+
         step_count = 0
+
+        eval_steps = []
+        eval_returns = []
 
         while step_count < total_steps:
             state, _ = self.env.reset()
             done = False
-            trajectory: List[Any] = []
+            trajectory = []
 
             while not done and step_count < total_steps:
                 action, logp, ent, val = self.predict(state)
+
                 next_state, reward, term, trunc, _ = self.env.step(action)
 
                 done = term or trunc
@@ -303,23 +308,20 @@ class PPOAgent(AbstractAgent):
                         eval_env,
                         num_episodes=eval_episodes,
                     )
-                    print(
-                        f"[Eval ] Step {step_count:6d} "
-                        f"AvgReturn {mean_r:5.1f} ± {std_r:4.1f}"
-                    )
 
-            policy_loss, value_loss, entropy_loss = self.update(trajectory)
-            total_return = sum(t[4] for t in trajectory)
+                    eval_steps.append(step_count)
+                    eval_returns.append(mean_r)
 
-            print(
-                f"[Train] Step {step_count:6d} Return {total_return:5.1f} "
-                f"Policy Loss {policy_loss:.3f} "
-                f"Value Loss {value_loss:.3f} "
-                f"Entropy Loss {entropy_loss:.3f}"
-            )
+                    print(f"[Eval] Step {step_count} Return {mean_r:.2f}")
+
+            self.update(trajectory)
 
         eval_env.close()
-        print("Training complete.")
+
+        return {
+            "steps": np.array(eval_steps),
+            "returns": np.array(eval_returns),
+        }
 
     def evaluate(
         self,
